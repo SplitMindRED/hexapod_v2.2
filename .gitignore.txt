@@ -1,6 +1,0 @@
-/keil/DebugConfig
-/keil/Listings
-/keil/Objects
-/keil/RTE
-*.uvguix.Maxim
-*.uvoptx
