@@ -1,4 +1,4 @@
-//#include "hexapod_2Gen.h"
+#include "hexapod.h"
 
 //bool servo_enable = false;
 //float Vx = 0, Vy = 0, Vz = 0;

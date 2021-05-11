@@ -392,9 +392,14 @@
           <GroupName>include</GroupName>
           <Files>
             <File>
-              <FileName>hexapod_2Gen.c</FileName>
+              <FileName>hexapod.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\include\hexapod_2Gen.c</FilePath>
+              <FilePath>.\include\hexapod.c</FilePath>
+            </File>
+            <File>
+              <FileName>splitmind_stm32f103_lib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\include\splitmind_stm32f103_lib.c</FilePath>
             </File>
           </Files>
         </Group>
