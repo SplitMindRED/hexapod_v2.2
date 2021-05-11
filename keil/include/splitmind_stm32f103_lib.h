@@ -88,7 +88,7 @@ void SPI_init(void);
 uint8_t SPI_Transfer(uint8_t data);
 void SPI_EnableSlave(void);
 void SPI_DisableSlave(void);
-uint16_t eval_CRC(void);
+//uint16_t eval_CRC(void);
 //END OF SPI-----------------------------------------------------------------------------------
 
 //TIMERS---------------------------------------------------------------------------------------
