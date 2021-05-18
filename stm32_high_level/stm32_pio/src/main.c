@@ -31,9 +31,9 @@
 #define START_BYTE_2       0x18
 #define STOP_BYTE          0x18
 
-#define LED_ERROR          B3
-#define LED_WARNING        B4
-#define LED_BT_CONNECTION  B5
+// #define LED_ERROR          B3
+// #define LED_WARNING        B4
+// #define LED_BT_CONNECTION  B5
 
 struct Master_output
 {
@@ -113,7 +113,7 @@ void test()
    delay(500);
 }
 
-void bigTest()
+void transferFrame()
 {
    SoftTimer_ms timeout;
    timeout.start_time = system_time;
@@ -454,7 +454,7 @@ void EXTI15_10_IRQHandler(void)//
                servo_enable = 1;
                UART1_println_str("Servo disable");
             }
-            digitalWrite(PORT_A, 12, servo_enable); //1-off 0-on     
+            // digitalWrite(PORT_A, 12, servo_enable); //1-off 0-on     
             digitalWrite(PORT_C, 13, servo_enable); //1-led off, 0-led on				
          }
       }
@@ -479,14 +479,19 @@ void setup()
    UART1_println_str("Setup...");
 
    SPI_init();
-   pinMode(PORT_B, 3, OUTPUT_2, OUTPUT_GPO_PUSH_PULL);
-   pinMode(PORT_B, 4, OUTPUT_2, OUTPUT_GPO_PUSH_PULL);
-   pinMode(PORT_B, 5, OUTPUT_2, OUTPUT_GPO_PUSH_PULL);
 
-   //test leds
-   digitalWrite(PORT_B, 3, 1);
-   digitalWrite(PORT_B, 4, 1);
-   digitalWrite(PORT_B, 5, 1);
+   //LEDs
+   // pinMode(PORT_B, 3, OUTPUT_2, OUTPUT_GPO_PUSH_PULL);
+   // pinMode(PORT_B, 4, OUTPUT_2, OUTPUT_GPO_PUSH_PULL);
+   // pinMode(PORT_B, 5, OUTPUT_2, OUTPUT_GPO_PUSH_PULL);
+
+   // //test leds
+   // digitalWrite(PORT_B, 3, 1);
+   // digitalWrite(PORT_B, 4, 1);
+   // digitalWrite(PORT_B, 5, 1);
+
+   //onboard led
+   pinMode(PORT_C, 13, OUTPUT_2, OUTPUT_GPO_PUSH_PULL);
 
    delay(1000);
 
@@ -511,108 +516,6 @@ void setup()
    __enable_irq();
 
    UART1_println_str("Done!");
-}
-
-void transferFrame3()
-{
-   SoftTimer_ms timeout;
-   timeout.start_time = system_time;
-   timeout.delay = 15;
-
-   uint8_t* p = (uint8_t*)&master_input;
-
-   //wait for 0
-   while (digitalRead(PORT_A, 8) != 0)
-   {
-      if (checkTimer(&timeout))
-      {
-         UART1_println_str("TIMEOUT 0!!!");
-         return;
-      }
-   }
-
-   // Enable slave
-   SPI_EnableSlave();
-
-   SPI_Transfer(START_BYTE_1);
-
-   //wait for 1
-   while (digitalRead(PORT_A, 8) != 1)
-   {
-      if (checkTimer(&timeout))
-      {
-         UART1_println_str("TIMEOUT 1!!!");
-         SPI_DisableSlave();
-         return;
-      }
-   }
-
-   //wait for 0
-   while (digitalRead(PORT_A, 8) != 0)
-   {
-      if (checkTimer(&timeout))
-      {
-         UART1_println_str("TIMEOUT 2!!!");
-         SPI_DisableSlave();
-         return;
-      }
-   }
-
-   SPI_Transfer(START_BYTE_2);
-
-   while (digitalRead(PORT_A, 8) != 1)
-   {
-      if (checkTimer(&timeout))
-      {
-         UART1_println_str("TIMEOUT 3!!!");
-         SPI_DisableSlave();
-         return;
-      }
-   }
-
-   for (uint8_t i = 0; i < sizeof(master_input); i++)
-      //for (uint8_t i = 0; i < 18; i++)
-   {
-      while (digitalRead(PORT_A, 8) != 0)
-      {
-         if (checkTimer(&timeout))
-         {
-            UART1_print_str("TIMEOUT 4!!! ");
-            UART1_println(i);
-            SPI_DisableSlave();
-            return;
-         }
-      }
-
-      //get byte and put to input struct, send byte from output struct
-      //SPI_Transfer(master_output.servo[i]);
-
-      if (i < sizeof(master_output))
-      {
-         //put byte for slave
-         SPI_Transfer(master_output.servo[i]);
-      }
-
-      while (digitalRead(PORT_A, 8) != 1)
-      {
-         if (checkTimer(&timeout))
-         {
-            UART1_print_str("TIMEOUT 5!!! ");
-            UART1_println(i);
-            SPI_DisableSlave();
-            return;
-         }
-      }
-
-      if (i < sizeof(master_input))
-      {
-         *p++ = SPI1->DR;
-      }
-
-   }
-
-   // Disable slave
-   SPI_DisableSlave();
 }
 
 void convertPPMtoAngle()
@@ -645,18 +548,16 @@ int main(void)
    timer1.start_time = system_time;
    timer1.delay = 0;
 
-
-
    while (1)
    {
       if (checkTimer(&timer1))
       {
          //unsigned long time1 = system_time;
-         bigTest();
+         transferFrame();
          //unsigned long time2 = system_time;
 
          //time1 = system_time;
-         printInputData();
+         // printInputData();
          //time2 = system_time;
          convertPPMtoAngle();
 

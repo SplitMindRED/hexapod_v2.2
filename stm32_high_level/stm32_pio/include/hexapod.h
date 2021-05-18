@@ -1,55 +1,50 @@
-//#ifndef stdbool
-//   #include "stdbool.h"
-//#endif
+#ifndef stdbool
+#include "stdbool.h"
+#endif
 
-//#ifndef stdint
-//   #include "stdint.h"
-//#endif
+#ifndef stdint
+#include "stdint.h"
+#endif
 
-//#ifndef math
-//   #include "math.h"
-//#endif
+#ifndef math
+#include "math.h"
+#endif
 
-//#ifndef PCA9685
-////   #include "PCA9685.h"
-//#endif
+#ifndef splitmind_stm32f103_lib
+#include "splitmind_stm32f103_lib.h"
+#endif
 
-//#ifndef splitmind_stm32f103_lib
-////#include "splitmind_stm32f103_lib.h"
-//#endif
-
-////Hexapod parametres
-////offset from (0, 0) on XY plane in every local coordinate system of leg
-//#define X_OFFSET                    50
-//#define Y_OFFSET                    50
+//Hexapod parametres
+//offset from (0, 0) on XY plane in every local coordinate system of leg
+#define X_OFFSET                    50
+#define Y_OFFSET                    50
 
 ////ver 1
 ////#define X_TRANSLATION               55.86
 ////#define X_TRANSLATION_MID           64.5
 ////#define Y_TRANSLATION               90.86
 
-////ver 2
-//#define X_TRANSLATION               62.93
-//#define X_TRANSLATION_MID           74.25
-//#define Y_TRANSLATION               97.93
+//ver 2
+#define X_TRANSLATION               62.93
+#define X_TRANSLATION_MID           74.25
+#define Y_TRANSLATION               97.93
 
-//#define STARTHEIGHT                 70
+#define STARTHEIGHT                 70
 
-////height of step
-//#define DELTAHEIGHT                 30
+//height of step
+#define DELTAHEIGHT                 30
 
-////diameter of step circle. distance of step
-//#define DIAMETER                    60
+//diameter of step circle. distance of step
+#define DIAMETER                    60
 
-//#define MOVEMENT_PERIOD             20000       //in mcs
-//#define MOVEMENT_FREQUENCY          50          //in Hz
+#define MOVEMENT_PERIOD             20000       //in mcs
+#define MOVEMENT_FREQUENCY          50          //in Hz
 
-//#define MAX_VEL_LINEAR              275         //mm/s
-//#define MAX_VEL_ANGULAR             1.0472      //rad/s (60 grad)
+#define MAX_VEL_LINEAR              275         //mm/s
+#define MAX_VEL_ANGULAR             1.0472      //rad/s (60 grad)
 
-//#define RAD_TO_DEG                  180 / pi
-//#define DEG_TO_RAD                  pi / 180
-
+#define RAD_TO_DEG                  180 / pi
+#define DEG_TO_RAD                  pi / 180
 
 //extern bool servo_enable;                                   //flag for enabling servo
 //extern float Vx, Vy, Vz;                                    //velocity for 3 dimensions (mm/s)

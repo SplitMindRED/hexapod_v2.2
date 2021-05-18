@@ -96,17 +96,17 @@ float map(float have, float have_min, float have_max, float need_min, float need
 {
 	float ratio = 0;
 	float add = 0;
-	
+
 	ratio = (need_max - need_min) / (have_max - have_min);
 	add = need_max - (have_max * ratio);
-	
+
 
 	return (have * ratio + add);
 }
 
 bool checkTimer(SoftTimer_ms* timer)
 {
-	if (system_time >= (timer->start_time + (timer->delay*1000)))
+	if (system_time >= (timer->start_time + (timer->delay * 1000)))
 	{
 		timer->start_time = system_time;
 		return true;
@@ -114,7 +114,7 @@ bool checkTimer(SoftTimer_ms* timer)
 	else
 	{
 		return false;
-	}	
+	}
 }
 
 //I2C----------------------------------------------------------------------------------------------------
@@ -205,7 +205,7 @@ void I2C_writeByte(uint8_t device_address, uint8_t address, uint8_t data)
 	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
 	{
 		stop++;
-		if(stop >= 1000)
+		if (stop >= 1000)
 		{
 			break;
 		}
@@ -237,111 +237,111 @@ void I2C_burstWrite(uint8_t device_address, uint8_t address, uint8_t n_data, uin
 uint8_t I2C_readByte(uint8_t device_address, uint8_t address)
 {
 	uint8_t data;
-   uint32_t stop = 0;
-   
+	uint32_t stop = 0;
+
 	while (I2C_GetFlagStatus(I2C1, I2C_FLAG_BUSY))
-   {
-      stop++;
-      if(stop >= 1000)
-      {
-         stop = 0;
-         break;
-      }
-   }
+	{
+		stop++;
+		if (stop >= 1000)
+		{
+			stop = 0;
+			break;
+		}
+	}
 
 	I2C_GenerateSTART(I2C1, ENABLE);
 	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT))
-   {
-      stop++;
-      if(stop >= 1000)
-      {
-         stop = 0;
-         break;
-      }
-   }
+	{
+		stop++;
+		if (stop >= 1000)
+		{
+			stop = 0;
+			break;
+		}
+	}
 
 	I2C_Send7bitAddress(I2C1, device_address, I2C_Direction_Transmitter);
 	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED))
-   {
-      stop++;
-      if(stop >= 1000)
-      {
-         stop = 0;
-         break;
-      }
-   }
+	{
+		stop++;
+		if (stop >= 1000)
+		{
+			stop = 0;
+			break;
+		}
+	}
 
 	I2C_SendData(I2C1, address);
 	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED))
-   {
-      stop++;
-      if(stop >= 1000)
-      {
-         stop = 0;
-         break;
-      }
-   }
+	{
+		stop++;
+		if (stop >= 1000)
+		{
+			stop = 0;
+			break;
+		}
+	}
 
 	I2C_GenerateSTART(I2C1, ENABLE);
 	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT))
-   {
-      stop++;
-      if(stop >= 1000)
-      {
-         stop = 0;
-         break;
-      }
-   }
+	{
+		stop++;
+		if (stop >= 1000)
+		{
+			stop = 0;
+			break;
+		}
+	}
 
 	I2C_Send7bitAddress(I2C1, device_address, I2C_Direction_Receiver);
 	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_RECEIVED))
-   {
-      stop++;
-      if(stop >= 1000)
-      {
-         stop = 0;
-         break;
-      }
-   }
+	{
+		stop++;
+		if (stop >= 1000)
+		{
+			stop = 0;
+			break;
+		}
+	}
 	data = I2C_ReceiveData(I2C1);
 	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_RECEIVED))
-   {
-      stop++;
-      if(stop >= 1000)
-      {
-         stop = 0;
-         break;
-      }
-   }
+	{
+		stop++;
+		if (stop >= 1000)
+		{
+			stop = 0;
+			break;
+		}
+	}
 
 	I2C_AcknowledgeConfig(I2C1, DISABLE);
 	I2C_GenerateSTOP(I2C1, ENABLE);
 	while (I2C_GetFlagStatus(I2C1, I2C_FLAG_BUSY))
-   {
-      stop++;
-      if(stop >= 1000)
-      {
-         stop = 0;
-         break;
-      }
-   }
+	{
+		stop++;
+		if (stop >= 1000)
+		{
+			stop = 0;
+			break;
+		}
+	}
 
 	return data;
 }
 
-void I2C_burstRead( uint8_t device_address, uint8_t address, uint8_t n_data, uint8_t* data)
+void I2C_burstRead(uint8_t device_address, uint8_t address, uint8_t n_data, uint8_t* data)
 {
 	uint32_t stop = 0;
 
 	while (I2C_GetFlagStatus(I2C1, I2C_FLAG_BUSY))
-   {
-      stop++;
-      if(stop >= 1000)
-      {
-         stop = 0;
-         break;
-      }
-   }
+	{
+		stop++;
+		if (stop >= 1000)
+		{
+			stop = 0;
+			break;
+		}
+	}
 
 	I2C_GenerateSTART(I2C1, ENABLE);
 	while (!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT))
@@ -401,7 +401,7 @@ void I2C_burstRead( uint8_t device_address, uint8_t address, uint8_t n_data, uin
 	}
 
 	I2C_AcknowledgeConfig(I2C1, ENABLE);
-	while (n_data--) 
+	while (n_data--)
 	{
 		if (!n_data)
 		{
@@ -452,7 +452,7 @@ void SPI_init(void)
 
 	//SPI1->CR1 |= SPI_CR1_BR_0;	
 	//SPI1->CR1 |= SPI_CR1_BR_1;	
-	SPI1->CR1 |= SPI_CR1_BR_2;	
+	SPI1->CR1 |= SPI_CR1_BR_2;
 
 	SPI1->CR1 |= SPI_CR1_MSTR;		//master mode	
 	SPI1->CR2 |= SPI_CR2_SSOE;		//SS output enable
@@ -460,7 +460,7 @@ void SPI_init(void)
 
 	//slave acknowledge pin
 //	pinMode(PORT_A, 3, INPUT, INPUT_PULL_UP_DOWN);
-   pinMode(PORT_A, 8, INPUT, INPUT_PULL_UP_DOWN);
+	pinMode(PORT_A, 8, INPUT, INPUT_PULL_UP_DOWN);
 
 	//NSS
 	pinMode(PORT_A, 4, OUTPUT_50, OUTPUT_GPO_PUSH_PULL);
@@ -490,7 +490,7 @@ uint8_t SPI_Transfer(uint8_t data)
 
 	// Wait until SPI is not busy anymore
 	//while (SPI1->SR & (SPI_I2S_FLAG_BSY));
-	
+
 	// Return received data from SPI data register
 	return recieved_value;
 }
@@ -575,8 +575,8 @@ void UART1_init(uint32_t baud_rate)
 	GPIOA->BSRR |= GPIO_ODR_ODR10;								//ODR = 1
 
 	USART1->CR1 = USART_CR1_UE;									//USART1 enable, clear bits
-	USART1->CR1 |= USART_CR1_M;   
-   USART1->CR1 |= USART_CR1_PCE;
+	USART1->CR1 |= USART_CR1_M;
+	USART1->CR1 |= USART_CR1_PCE;
 
 	USART1->BRR = 72000000 / baud_rate;							//USARTDIV = Fck / (16 * BAUD) = 72000000 / (16 * 9600) = 468,75 -> USART_BRR = 468,75 * 16 = 7500 (for 9600 baud rate)
 
@@ -693,7 +693,7 @@ void UART1_println_div(double data)
 void UART1_printNumber(unsigned long number)
 {
 	char string[11];
-	char* pointer = &string[sizeof(string) - 1];	
+	char* pointer = &string[sizeof(string) - 1];
 
 	*pointer = '\0';
 	pointer--;
@@ -711,7 +711,7 @@ void UART1_printNumber(unsigned long number)
 
 			*(pointer--) = symbol + '0';
 		}
-	}	
+	}
 
 	return UART1_sendString(pointer + 1);
 }

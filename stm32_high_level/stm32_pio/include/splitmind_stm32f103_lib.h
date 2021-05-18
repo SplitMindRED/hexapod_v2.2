@@ -1,9 +1,9 @@
 /***********************************************
 *	SplitMind Library
 *	Version 0.8
-* 
+*
 *  Update: SPI
-* 
+*
 *  Functions for low level initialization and control
 *
 *	WRITING BITs
@@ -17,6 +17,9 @@
 *  a & ( 1 << 7 | 1 << 8 )	   //checks 7th and 8th bits
 *
 ************************************************/
+
+#ifndef splitmind_stm32f103_lib
+#define splitmind_stm32f103_lib
 
 #include "stm32f10x.h"                  // Device header
 #include "stm32f10x_rcc.h"              // Keil::Device:StdPeriph Drivers:RCC
@@ -104,7 +107,7 @@ void UART1_init(uint32_t baud_rate);
 void UART1_sendByte(char byte);
 void UART1_sendString(char* string);
 void UART1_print(long data);
-void UART1_print_str(char * string);
+void UART1_print_str(char* string);
 void UART1_print_div(double data);
 void UART1_println(long data);
 void UART1_println_str(char* string);
@@ -116,3 +119,4 @@ void UART1_printNumber(unsigned long number);
 void SPI1_init(uint32_t baud_rate);
 //END OF SPI----------------------------------------------------------------------------------
 
+#endif
