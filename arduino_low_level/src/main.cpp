@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <time_utils.h>
 #include <spi_data_structure.h>
 #include <MPU9250.h>
@@ -114,8 +115,6 @@ void test1()
 
 void bigTest()
 {
-   //�������� ����� ������� ��������� � �����������
-   //�� ����� �� spdr ����� 18
    uint8_t buffer[54];
    uint8_t* p_slave_output = (uint8_t*)&slave_output;
    uint8_t* p_slave_input = (uint8_t*)&slave_input;
@@ -400,6 +399,8 @@ void servoStep()
       //}
 
       angle_array[0] = slave_input.servo[0];
+      angle_array[1] = 90;
+      angle_array[2] = 90;
 
       tca.selectLine(TCA9548A_SWITCH_1);
       pwm1.burstSetServoAngles(angle_array);
