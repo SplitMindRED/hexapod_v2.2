@@ -337,7 +337,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\include</IncludePath>
+              <IncludePath>..\stm32_pio\include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -384,17 +384,17 @@
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\main.c</FilePath>
+              <FilePath>..\stm32_pio\src\main.c</FilePath>
             </File>
             <File>
               <FileName>hexapod.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\include\hexapod.c</FilePath>
+              <FilePath>..\stm32_pio\include\hexapod.c</FilePath>
             </File>
             <File>
               <FileName>splitmind_stm32f103_lib.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\include\splitmind_stm32f103_lib.c</FilePath>
+              <FilePath>..\stm32_pio\include\splitmind_stm32f103_lib.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -404,12 +404,12 @@
             <File>
               <FileName>hexapod.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\include\hexapod.h</FilePath>
+              <FilePath>..\stm32_pio\include\hexapod.h</FilePath>
             </File>
             <File>
               <FileName>splitmind_stm32f103_lib.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\include\splitmind_stm32f103_lib.h</FilePath>
+              <FilePath>..\stm32_pio\include\splitmind_stm32f103_lib.h</FilePath>
             </File>
           </Files>
         </Group>

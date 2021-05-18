@@ -1,6 +1,6 @@
-DebugConfig
-Listings
-Objects
-RTE
-/keil/*.Maxim
-/keil/*.uvoptx
+stm32_high_level/keil/DebugConfig
+stm32_high_level/keil/Listings
+stm32_high_level/keil/Objects
+stm32_high_level/keil/RTE
+stm32_high_level/keil/*.Maxim
+stm32_high_level/keil/*.uvoptx

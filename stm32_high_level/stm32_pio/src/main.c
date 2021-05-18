@@ -1,4 +1,5 @@
 #include "splitmind_stm32f103_lib.h"
+#include "hexapod.h"
 
 //#define PRINT_DATA
 #ifdef PRINT_DATA
@@ -118,7 +119,7 @@ void bigTest()
    timeout.start_time = system_time;
    timeout.delay = 15;
 
-//   uint8_t buffer[54];
+   //   uint8_t buffer[54];
    uint8_t* p = (uint8_t*)&master_input;
 
    //wait for 0
@@ -410,6 +411,7 @@ void EXTI_init(void)
    EXTI->PR = EXTI_RTSR_TR11;       //pin
    EXTI->IMR |= EXTI_RTSR_TR11;     //pin
 
+
    //enable external interruptions of pin 0
    NVIC_EnableIRQ(EXTI15_10_IRQn);  //particular EXTI group for pin
 }
@@ -495,14 +497,14 @@ void setup()
    // Disable SPI slave device
    SPI_DisableSlave();
 
-   for (uint8_t i = 0; i < 18; i++)
-   {
-      master_output.servo[i] = i * 2;
-      UART1_print_str("Servo ");
-      UART1_print(i);
-      UART1_print_str(" : ");
-      UART1_println(master_output.servo[i]);
-   }
+   // for (uint8_t i = 0; i < 18; i++)
+   // {
+   //    master_output.servo[i] = i * 2;
+   //    UART1_print_str("Servo ");
+   //    UART1_print(i);
+   //    UART1_print_str(" : ");
+   //    UART1_println(master_output.servo[i]);
+   // }
 
    EXTI_init();
 
@@ -642,6 +644,8 @@ int main(void)
    SoftTimer_ms timer1;
    timer1.start_time = system_time;
    timer1.delay = 0;
+
+
 
    while (1)
    {

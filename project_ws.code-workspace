@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "arduino_low_level"
+		},
+		{
+			"path": "stm32_high_level\\stm32_pio"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"splitmind_stm32f103_lib.h": "c"
+		}
+	}
+}
