@@ -151,7 +151,7 @@ void moveLeg(uint8_t leg_num, double x, double y, double z);
 void rotateDirection(uint8_t leg_num);
 
 //set angle to specified servo
-void setServoAngle(uint8_t servo_num, double Q);
+void setServoAngle(uint8_t servo_num, uint8_t Q);
 
 ////void turning
 

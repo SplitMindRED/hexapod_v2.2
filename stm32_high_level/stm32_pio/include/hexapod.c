@@ -8,7 +8,7 @@ uint16_t delta_interruption_time = 0;
 uint8_t channel_counter = 0;
 bool start_package = false;
 uint16_t channel[6] = { 0, 0, 0, 0, 0, 0 };
-bool servo_enable = false;
+bool servo_enable = true;
 
 float Vx = 0, Vy = 0, Vz = 0;
 float Wz = 0;
@@ -156,37 +156,37 @@ void moveLeg(uint8_t leg_num, double x, double y, double z)
 {
    findAngles(leg_num, x, y, z);
 
-   // setServoAngle(leg_num * 3, Leg[leg_num * 3].q0);
-   // setServoAngle(leg_num * 3 + 1, Leg[leg_num * 3].q1);
-   // setServoAngle(leg_num * 3 + 2, Leg[leg_num * 3].q2);
+   setServoAngle(leg_num * 3, (uint8_t)Leg[leg_num].q0);
+   setServoAngle(leg_num * 3 + 1, (uint8_t)Leg[leg_num].q1);
+   setServoAngle(leg_num * 3 + 2, (uint8_t)Leg[leg_num].q2);
 
-   q2 = 90 + 90 - q2;
+   // q2 = 90 + 90 - q2;
 
-   setServoAngle(0 * 3, q0);
-   setServoAngle(0 * 3 + 1, q1);
-   setServoAngle(0 * 3 + 2, q2);
+   // setServoAngle(0 * 3, q0);
+   // setServoAngle(0 * 3 + 1, q1);
+   // setServoAngle(0 * 3 + 2, q2);
+
+   UART1_print_str("s0: ");
+   UART1_print_div(Leg[leg_num].q0);
+   UART1_print_str(" s1: ");
+   UART1_print_div(Leg[leg_num].q1);
+   UART1_print_str(" s2: ");
+   UART1_println_div(Leg[leg_num].q2);
 
    Leg[leg_num].current_x = x;
    Leg[leg_num].current_y = y;
    Leg[leg_num].current_z = z;
 }
 
-void setServoAngle(uint8_t servo_num, double Q)
+void setServoAngle(uint8_t servo_num, uint8_t Q)
 {
    //put angle to master output structure
-   p_angle_array[servo_num] = (uint8_t)Q;
+   // p_angle_array[servo_num] = (uint8_t)Q;
+   master_output.servo[servo_num] = Q;
 }
 
 void servoManualControl(void)
 {
-   // setServoAngle(0, map(channel[0], 600, 1600, 15, 165));
-   // setServoAngle(1, map(channel[1], 600, 1600, 15, 165));
-   // setServoAngle(2, map(channel[2], 600, 1600, 15, 165));
-
-   // setServoAngle(0, 90);
-   // setServoAngle(1, 90);
-   // setServoAngle(2, 90);
-
    for (int i = 0; i < 18; i += 3)
    {
       uint8_t servo0 = map(channel[0], 600, 1600, 15, 165);
@@ -219,11 +219,13 @@ void switchMode(void)
       //heightTest(H);
       //rotateBody();
       // new_version();
+      // legManualControl(2);
+      moveLeg(2, 110, 110, 0);
    }
    else if (channel[5] < 700)                            //high
    {
       // hexapodMove();
-      //new_version();
+      newVersion();
       //square_test();
    }
 }
@@ -892,11 +894,7 @@ void legManualControl(uint8_t leg_num)
       }
    }
 
-
-   moveLeg(2, Leg[2].current_x, Leg[2].current_y, height);
-   // moveLeg(2, 60.458, 60.458, -85);
-   // moveLeg(2, 130, 0, 0);
-
+   moveLeg(leg_num, Leg[leg_num].current_x, Leg[leg_num].current_y, height);
 
    // UART1_print_div(Leg[2].q0);
    // UART1_print_str(", ");

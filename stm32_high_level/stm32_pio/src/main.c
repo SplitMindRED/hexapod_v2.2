@@ -1,7 +1,7 @@
 #include "splitmind_stm32f103_lib.h"
 #include "hexapod.h"
 
-//#define PRINT_DATA
+#define PRINT_DATA
 #ifdef PRINT_DATA
 #define PRINT_AC
 #define PRINT_GY
@@ -415,7 +415,6 @@ int main(void)
 
          convertFlySkyData();
          switchMode();
-         // legManualControl(0);
 
          //unsigned long time1 = system_time;
          transferFrame();
