@@ -414,7 +414,8 @@ int main(void)
          // servoManualControl();
 
          convertFlySkyData();
-         legManualControl(0);
+         switchMode();
+         // legManualControl(0);
 
          //unsigned long time1 = system_time;
          transferFrame();
@@ -422,7 +423,7 @@ int main(void)
          //unsigned long time2 = system_time;
 
          //time1 = system_time;
-         printInputData();
+         // printInputData();
 
          // if (c2 > 250)
          // {

@@ -133,6 +133,8 @@ void legManualControl(uint8_t leg_num);
 
 void convertFlySkyData(void);
 
+void switchMode(void);
+
 //inverse kinematics solution for leg: gets point (x,y,z), returns q0, q1, q2 servo angles of leg
 void findAngles(uint8_t leg_num, double x, double y, double z);
 

@@ -179,13 +179,53 @@ void setServoAngle(uint8_t servo_num, double Q)
 
 void servoManualControl(void)
 {
-   setServoAngle(0, map(channel[0], 600, 1600, 15, 165));
-   setServoAngle(1, map(channel[1], 600, 1600, 15, 165));
-   setServoAngle(2, map(channel[2], 600, 1600, 15, 165));
+   // setServoAngle(0, map(channel[0], 600, 1600, 15, 165));
+   // setServoAngle(1, map(channel[1], 600, 1600, 15, 165));
+   // setServoAngle(2, map(channel[2], 600, 1600, 15, 165));
 
    // setServoAngle(0, 90);
    // setServoAngle(1, 90);
    // setServoAngle(2, 90);
+
+   for (int i = 0; i < 18; i += 3)
+   {
+      uint8_t servo0 = map(channel[0], 600, 1600, 15, 165);
+      uint8_t servo1 = map(channel[1], 600, 1600, 15, 165);
+      uint8_t servo2 = map(channel[2], 600, 1600, 15, 165);
+
+      UART1_print_str("s0: ");
+      UART1_print_div(servo0);
+      UART1_print_str(" s1: ");
+      UART1_print_div(servo1);
+      UART1_print_str(" s2: ");
+      UART1_println_div(servo2);
+
+      setServoAngle(i, servo0);
+      setServoAngle(i + 1, servo1);
+      setServoAngle(i + 2, servo2);
+   }
+}
+
+void switchMode(void)
+{
+   //SWC switch mode
+   if (channel[5] > 1300)                                //low
+   {
+      servoManualControl();
+      //rotateBody();
+   }
+   else if (channel[5] < 1200 && channel[5] > 900)       //mid
+   {
+      //heightTest(H);
+      //rotateBody();
+      // new_version();
+   }
+   else if (channel[5] < 700)                            //high
+   {
+      // hexapodMove();
+      //new_version();
+      //square_test();
+   }
 }
 
 void convertFlySkyData(void)

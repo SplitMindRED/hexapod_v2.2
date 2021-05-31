@@ -438,19 +438,39 @@ void servoControl()
    digitalWrite(OE_1, is_OE);
    digitalWrite(OE_2, is_OE);
 
+   static uint8_t servo_angles_1[9] = { 90, 90, 90, 90, 90, 90, 90, 90, 90 };
+   static uint8_t servo_angles_2[9] = { 90, 90, 90, 90, 90, 90, 90, 90, 90 };
+
+   servo_angles_1[0] = slave_input.servo[0];
+   servo_angles_1[1] = slave_input.servo[1];
+   servo_angles_1[2] = slave_input.servo[2];
+   servo_angles_1[3] = slave_input.servo[17];
+   servo_angles_1[4] = slave_input.servo[16];
+   servo_angles_1[5] = slave_input.servo[15];
+   servo_angles_1[6] = slave_input.servo[14];
+   servo_angles_1[7] = slave_input.servo[13];
+   servo_angles_1[8] = slave_input.servo[12];
+
+   servo_angles_2[0] = slave_input.servo[11];
+   servo_angles_2[1] = slave_input.servo[10];
+   servo_angles_2[2] = slave_input.servo[9];
+   servo_angles_2[3] = slave_input.servo[8];
+   servo_angles_2[4] = slave_input.servo[7];
+   servo_angles_2[5] = slave_input.servo[6];
+   servo_angles_2[6] = slave_input.servo[5];
+   servo_angles_2[7] = slave_input.servo[4];
+   servo_angles_2[8] = slave_input.servo[3];
+
    if (is_OE == false)
    {
-      // Serial.print(slave_input.servo[0]);
-      // Serial.print(", ");
-      // Serial.print(slave_input.servo[1]);
-      // Serial.print(", ");
-      // Serial.println(slave_input.servo[2]);
-
       tca.selectLine(TCA9548A_SWITCH_1);
-      pwm1.burstSetServoAngles((uint8_t*)&slave_input);
+      // pwm1.burstSetServoAngles((uint8_t*)&slave_input);
+      pwm1.burstSetServoAngles((uint8_t*)&servo_angles_1);
+
 
       tca.selectLine(TCA9548A_SWITCH_3);
-      pwm2.burstSetServoAngles((uint8_t*)&slave_input + 9);
+      // pwm2.burstSetServoAngles((uint8_t*)&slave_input + 9);
+      pwm2.burstSetServoAngles((uint8_t*)&servo_angles_2);
    }
 }
 
