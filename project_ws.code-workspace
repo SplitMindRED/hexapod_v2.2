@@ -9,7 +9,9 @@
 	],
 	"settings": {
 		"files.associations": {
-			"splitmind_stm32f103_lib.h": "c"
+			"splitmind_stm32f103_lib.h": "c",
+			"hexapod.h": "c",
+			"stm_spi_data_structure.h": "c"
 		}
 	}
 }

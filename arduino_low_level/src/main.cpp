@@ -34,6 +34,7 @@
 //SPI protocol
 #define START_BYTE_1          0xE7
 #define START_BYTE_2          0x18
+#define FLAG_OE              (1 << 0)
 
 //TCA9548A
 #define TCA9548A_RESET_PIN    2
@@ -90,6 +91,8 @@ unsigned long system_time_mil = 0;
 unsigned long system_time_mic = 0;
 unsigned long stopwatch = 0;
 
+bool is_OE = true;
+
 void test()
 {
    static uint8_t a[2];
@@ -115,7 +118,7 @@ void test1()
 
 void bigTest()
 {
-   uint8_t buffer[54];
+   // uint8_t buffer[54];
    uint8_t* p_slave_output = (uint8_t*)&slave_output;
    uint8_t* p_slave_input = (uint8_t*)&slave_input;
    uint8_t tmp = 0;
@@ -203,13 +206,16 @@ void bigTest()
 
 void printInputData()
 {
-   for (uint8_t byte_counter = 0; byte_counter < sizeof(slave_input); byte_counter++)
+   for (uint8_t servo_num = 0; servo_num < 18; servo_num++)
    {
       Serial.print("servo ");
-      Serial.print(byte_counter);
+      Serial.print(servo_num);
       Serial.print(": ");
-      Serial.println(slave_input.servo[byte_counter]);
+      Serial.println(slave_input.servo[servo_num]);
    }
+
+   Serial.print("OE: ");
+   Serial.println(is_OE);
 }
 
 void printOutputData()
@@ -324,7 +330,7 @@ void servoTest()
 void servoBurstTest()
 {
    static bool flag = 0;
-   double angle_array[18];
+   uint8_t angle_array[18];
 
    if (timer_servo.check())
    {
@@ -362,8 +368,8 @@ void servoBurstTest()
 
 void servoStep()
 {
-   static double angle_array[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-   static bool direction = true;
+   static uint8_t angle_array[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+   // static bool direction = true;
 
    if (timer_step_servo.check())
    {
@@ -414,6 +420,40 @@ void servoStep()
    }
 }
 
+void servoControl()
+{
+   if (slave_input.flags & FLAG_OE)
+   {
+      //off
+      is_OE = true;
+      // Serial.println("Servo disable");
+   }
+   else
+   {
+      //on
+      is_OE = false;
+      // Serial.println("Servo enable");
+   }
+
+   digitalWrite(OE_1, is_OE);
+   digitalWrite(OE_2, is_OE);
+
+   if (is_OE == false)
+   {
+      // Serial.print(slave_input.servo[0]);
+      // Serial.print(", ");
+      // Serial.print(slave_input.servo[1]);
+      // Serial.print(", ");
+      // Serial.println(slave_input.servo[2]);
+
+      tca.selectLine(TCA9548A_SWITCH_1);
+      pwm1.burstSetServoAngles((uint8_t*)&slave_input);
+
+      tca.selectLine(TCA9548A_SWITCH_3);
+      pwm2.burstSetServoAngles((uint8_t*)&slave_input + 9);
+   }
+}
+
 void setup(void)
 {
    system_time_mic = micros();
@@ -424,6 +464,13 @@ void setup(void)
 #ifdef SETUP_INFO
    Serial.println("Setup...");
 #endif
+
+   //pins for output enble of PCA9685
+   pinMode(OE_1, OUTPUT);
+   pinMode(OE_2, OUTPUT);
+
+   digitalWrite(OE_1, is_OE);
+   digitalWrite(OE_2, is_OE);
 
    //pins for SPI
    pinMode(MOSI_PIN, INPUT);
@@ -576,7 +623,7 @@ void loop(void)
    //AllServoTest();
    //servoTest();
    //servoBurstTest();
-   servoStep();
+   // servoStep();
 
    if (timer_main_loop.check())
    {
@@ -584,29 +631,31 @@ void loop(void)
       watch1.start();
       tca.selectLine(TCA9548A_SWITCH_0);
       ina1.getCurrent(((uint8_t*)&slave_output) + 18, 0);
-      //ina2.getCurrent(((uint8_t*)&slave_output) + 18 + 6, 0);
+      ina2.getCurrent(((uint8_t*)&slave_output) + 18 + 6, 0);
 
-      //tca.selectLine(TCA9548A_SWITCH_1);
-      //ina3.getCurrent(((uint8_t*)&slave_output) + 18 + 12, 0);
+      tca.selectLine(TCA9548A_SWITCH_1);
+      ina3.getCurrent(((uint8_t*)&slave_output) + 18 + 12, 0);
 
-      //tca.selectLine(TCA9548A_SWITCH_2);
-      //ina4.getCurrent(((uint8_t*)&slave_output) + 18 + 18, 0);
-      //ina5.getCurrent(((uint8_t*)&slave_output) + 18 + 24, 0);
+      tca.selectLine(TCA9548A_SWITCH_2);
+      ina4.getCurrent(((uint8_t*)&slave_output) + 18 + 18, 0);
+      ina5.getCurrent(((uint8_t*)&slave_output) + 18 + 24, 0);
 
-      //tca.selectLine(TCA9548A_SWITCH_3);
-      //ina6.getCurrent(((uint8_t*)&slave_output) + 18 + 30, 1);
-      //watch1.stop();
+      tca.selectLine(TCA9548A_SWITCH_3);
+      ina6.getCurrent(((uint8_t*)&slave_output) + 18 + 30, 1);
+      // watch1.stop();
 
-      //watch2.start();
-      //tca.selectLine(SWITCH_MPU9250);
-      //mpu.getData((uint8_t*)&slave_output, 14);
-      //watch2.stop();
+      // watch2.start();
+      tca.selectLine(SWITCH_MPU9250);
+      mpu.getData((uint8_t*)&slave_output, 14);
+      // watch2.stop();
 
-      watch3.start();
+      // watch3.start();
       bigTest();
-      watch3.stop();
+      // watch3.stop();
 
-      //printInputData();
+      servoControl();
+
+      printInputData();
       //printOutputData();
 
       //Serial.print("t: ");
@@ -622,7 +671,7 @@ void loop(void)
       //Serial.println(watch3.getDelta());
 
       Serial.print("t_st: ");
-      //Serial.println(watch1.time_start);
+      Serial.println(watch1.time_start);
       Serial.println(watch1.time_start - watch1.time_stop);
    }
 }

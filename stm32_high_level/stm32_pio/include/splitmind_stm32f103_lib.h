@@ -18,8 +18,8 @@
 *
 ************************************************/
 
-#ifndef splitmind_stm32f103_lib
-#define splitmind_stm32f103_lib
+#ifndef splitmind_stm32f103_lib_h
+#define splitmind_stm32f103_lib_h
 
 #include "stm32f10x.h"                  // Device header
 #include "stm32f10x_rcc.h"              // Keil::Device:StdPeriph Drivers:RCC

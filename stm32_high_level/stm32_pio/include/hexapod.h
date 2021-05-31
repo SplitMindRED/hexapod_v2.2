@@ -1,3 +1,6 @@
+#ifndef hexapod_h
+#define hexapod_h
+
 #ifndef stdbool
 #include "stdbool.h"
 #endif
@@ -10,8 +13,12 @@
 #include "math.h"
 #endif
 
-#ifndef splitmind_stm32f103_lib
+#ifndef splitmind_stm32f103_lib_h
 #include "splitmind_stm32f103_lib.h"
+#endif
+
+#ifndef stm_spi_data_structure_h
+#include "stm_spi_data_structure.h"
 #endif
 
 //Hexapod parametres
@@ -46,124 +53,129 @@
 #define RAD_TO_DEG                  180 / pi
 #define DEG_TO_RAD                  pi / 180
 
+extern uint16_t channel[6];
+// bool servo_enable;
+
+extern bool stop_flag;
+
 //extern bool servo_enable;                                   //flag for enabling servo
-//extern float Vx, Vy, Vz;                                    //velocity for 3 dimensions (mm/s)
-//extern float Wz;                                            //velocity for turning (grad/s)
-//extern float input_roll, input_pitch, input_yaw;            //angle for 3 rotation axis
-////extern float current_roll, current_pitch, current_yaw;
+extern float Vx, Vy, Vz;                                    //velocity for 3 dimensions (mm/s)
+extern float Wz;                                            //velocity for turning (grad/s)
+extern float input_roll, input_pitch, input_yaw;            //angle for 3 rotation axis
+extern float current_roll, current_pitch, current_yaw;
 
-////extern unsigned long time_from_start;
-//extern unsigned long current_interruption_time;
-//extern uint16_t delta_interruption_time;
-//extern uint8_t channel_counter;
-//extern bool start_package;
-//extern float channel[6];
+//all cordinates of this structure are 
+//in local coordinate system of each leg
+extern struct Legs
+{
+   //three start coordiantes of leg in local coordinate system
+   int16_t start_x;
+   int16_t start_y;
+   int16_t start_z;
 
-////servo angles--------------------------
-//extern double q0, q1, q2;
-////--------------------------------------
+   //f(t) coordinates functions
+   //(target point)
+   double Xt, Yt, Zt;
 
-////all cordinates of this structure are 
-////in local coordinate system of each leg
-//extern struct Legs
-//{
-//   //three start coordiantes of leg in local coordinate system
-//   int16_t start_x;
-//   int16_t start_y;
-//   int16_t start_z;
+   //current local position of leg (x, y, z) (leg_link)
+   double current_x;
+   double current_y;
+   double current_z;
 
-//   //f(t) coordinates functions
-//   //(target point)
-//   double Xt, Yt, Zt;
+   //new local position of leg (x, y, z) (not using yet, idk why)
+   double target_x;
+   double target_y;
+   double target_z;
 
-//   //current local position of leg (x, y, z) (leg_link)
-//   double current_x;
-//   double current_y;
-//   double current_z;
+   //target angle for servos
+   double q0, q1, q2;
 
-//   //new local position of leg (x, y, z) (not using yet, idk why)
-//   double target_x;
-//   double target_y;
-//   double target_z;
+   //velocity on previous cycle step
+   float Vx_last;
+   float Vy_last;
 
-//   //target angle for servos
-//   double q0, q1, q2;
+   //tf from leg link to base link
+   float tf_leg_link_x;
+   float tf_leg_link_y;
+   //tf from step footprint to leg link
+   float tf_step_footprint_x;
+   float tf_step_footprint_y;
 
-//   //velocity on previous cycle step
-//   float Vx_last;
-//   float Vy_last;
+   //distance between center of mass and leg tip
+   float tip_radius;
 
-//   //tf from leg link to base link
-//   float tf_leg_link_x;
-//   float tf_leg_link_y;
-//   //tf from step footprint to leg link
-//   float tf_step_footprint_x;
-//   float tf_step_footprint_y;
+   //phase of leg: 0 -> ground moving, 1 -> air moving
+   bool phase;
 
-//   //distance between center of mass and leg tip
-//   float tip_radius;
+} Leg[6];
 
-//   //phase of leg: 0 -> ground moving, 1 -> air moving
-//   bool phase;
+extern int16_t local_start_point[6][3];
+extern float leg_translation[6][3];
 
-//} Leg[6];
+extern float diameter;
 
-//extern int16_t local_start_point[6][3];
-//extern float leg_translation[6][3];
+extern float k;
+extern float dH;
+extern float H;
 
-//extern float diameter;
+//var for controlling movement function loop
+extern unsigned long next_time;
 
-//extern float k;
-//extern float dH;
-//extern float H;
+//hexapod initialisation, moving legs to start positions
+void hexapodInit(uint8_t* l_p_angle_array);
 
-//extern unsigned long next_time;
+void squareTest(void);
 
-////hexapod initialisation, moving legs to start positions
-//void hexapod_init(void);
+//convert data from FlySky reciever channels to velocities and rotate angles
+void servoManualControl(void);
 
-//void square_test(void);
+void legManualControl(uint8_t leg_num);
 
-////convert data from FlySky reciever channels to velocities and rotate angles
-//void convert_input_data(void);
+void convertFlySkyData(void);
 
-////inverse kinematics solution for leg: gets point (x,y,z), returns q0, q1, q2 servo angles of leg
-//void findAngles(uint8_t leg_num, double x, double y, double z);
+//inverse kinematics solution for leg: gets point (x,y,z), returns q0, q1, q2 servo angles of leg
+void findAngles(uint8_t leg_num, double x, double y, double z);
 
-////rotate point (x,y) for q rad
-//void rotatePoint(double* x, double* y, double q);
+//rotate point (x,y) for q rad
+void rotatePoint(double* x, double* y, double q);
 
-////return angle in rad for vector (x,y)
-//double getAngle(double x, double y);
+//return angle in rad for vector (x,y)
+double getAngle(double x, double y);
 
-////move leg tip to (x,y,x) point
-//void moveLeg(uint8_t leg_num, double x, double y, double z);
+//move leg tip to (x,y,x) point
+void moveLeg(uint8_t leg_num, double x, double y, double z);
 
-////rotate straight movement line
-//void rotateDirection(uint8_t leg_num);
+//rotate straight movement line
+void rotateDirection(uint8_t leg_num);
+
+//set angle to specified servo
+void setServoAngle(uint8_t servo_num, double Q);
 
 ////void turning
 
-////add Vx, Vy
-//void addLinearVelocity(uint8_t leg_num, bool phase);
+//add Vx, Vy
+void addLinearVelocity(uint8_t leg_num, bool phase);
 
-////find Z from x,y
-//void evaluateZ(uint8_t leg_num, bool phase);
+//find Z from x,y
+void evaluateZ(uint8_t leg_num, bool phase);
 
-////bool phaseControl(uint8_t group_num);
-//bool phaseControl(uint8_t leg_num);
+//
+bool phaseControl(uint8_t leg_num);
 
-////rotate body in 3 axis
-//void rotateBody(void);
+//rotate body in 3 axis
+void rotateBody(void);
 
-////function with first gait movement
-//void hexapodMove(void);
+//function with first gait movement
+void hexapodMove(void);
 
-////dev function for testing new movement features
-//void new_version(void);
+//dev function for testing new movement features
+void newVersion(void);
 
-////EXTERNAL INTERRUPTIONS----------------------------------------------------------------------
-////Interruptions for PPM 
-//void EXTI0_IRQHandler(void);
-//void EXTI0_init(void);
-////END OF EXTERNAL INTERRUPTIONS---------------------------------------------------------------
+//************ EXTERNAL INTERRUPTIONS *******************************
+//Interruptions for PPM 
+//particular EXTI group for pin
+void EXTI15_10_IRQHandler(void);
+void EXTI_init(void);
+//************ END OF EXTERNAL INTERRUPTIONS ************************
+
+#endif
