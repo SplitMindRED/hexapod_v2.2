@@ -221,6 +221,7 @@ void switchMode(void)
       // new_version();
       // legManualControl(2);
 
+
       // moveLeg(0, 110, -110, 0);
       // moveLeg(1, 155, 0, 0);
       // moveLeg(2, 110, 110, 0);
