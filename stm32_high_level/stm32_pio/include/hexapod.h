@@ -53,6 +53,9 @@
 #define RAD_TO_DEG                  180 / pi
 #define DEG_TO_RAD                  pi / 180
 
+extern uint16_t servomin;
+extern uint16_t servomax;
+
 extern uint16_t channel[6];
 // bool servo_enable;
 

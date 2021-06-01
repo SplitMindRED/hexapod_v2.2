@@ -2,8 +2,15 @@
 
 bool stop_flag = 0;
 
-#define SERVOMIN  						287.0 // 100 Hz 700 mcs
-#define SERVOMAX  						942.0 // 100 Hz 2300 mcs
+#define PWM_FREQ                    200   //Hz
+
+// #define servomin  						287.0 // 100 Hz 700 mcs
+// #define servomax  						942.0 // 100 Hz 2300 mcs
+// #define servomin  						700/(1000000/PWM_FREQ/4096)
+// #define servomax  						2300/(1000000/PWM_FREQ/4096) 
+
+uint16_t servomin = 0;
+uint16_t servomax = 0;
 
 //local variables
 unsigned long current_interruption_time = 0;
@@ -70,6 +77,12 @@ unsigned long next_time = 0;
 
 void hexapodInit(uint8_t* l_p_angle_array)
 {
+   uint16_t a_tmp = 1000000 / PWM_FREQ;
+   float c_tmp = (float)a_tmp / 4096;
+
+   servomin = (700.0 / c_tmp);
+   servomax = (2300.0 / c_tmp);
+
    p_angle_array = l_p_angle_array;
 
    for (uint8_t leg_num = 0; leg_num < 6; leg_num++)
@@ -203,9 +216,9 @@ void servoManualControl(void)
       // uint8_t servo1 = map(channel[1], 600, 1600, 15, 165);
       // uint8_t servo2 = map(channel[2], 600, 1600, 15, 165);
 
-      float servo0 = map(channel[0], 600, 1600, SERVOMIN, SERVOMAX);
-      float servo1 = map(channel[1], 600, 1600, SERVOMIN, SERVOMAX);
-      float servo2 = map(channel[2], 600, 1600, SERVOMIN, SERVOMAX);
+      float servo0 = map(channel[0], 600, 1600, servomin, servomax);
+      float servo1 = map(channel[1], 600, 1600, servomin, servomax);
+      float servo2 = map(channel[2], 600, 1600, servomin, servomax);
 
       UART1_print_str("s00: ");
       UART1_print_div(servo0);
