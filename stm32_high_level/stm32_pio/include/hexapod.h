@@ -23,8 +23,8 @@
 
 //Hexapod parametres
 //offset from (0, 0) on XY plane in every local coordinate system of leg
-#define X_OFFSET                    50
-#define Y_OFFSET                    50
+#define X_OFFSET                    70
+#define Y_OFFSET                    70
 
 ////ver 1
 ////#define X_TRANSLATION               55.86

@@ -166,12 +166,12 @@ void moveLeg(uint8_t leg_num, double x, double y, double z)
    // setServoAngle(0 * 3 + 1, q1);
    // setServoAngle(0 * 3 + 2, q2);
 
-   UART1_print_str("s0: ");
-   UART1_print_div(Leg[leg_num].q0);
-   UART1_print_str(" s1: ");
-   UART1_print_div(Leg[leg_num].q1);
-   UART1_print_str(" s2: ");
-   UART1_println_div(Leg[leg_num].q2);
+   // UART1_print_str("s0: ");
+   // UART1_print_div(Leg[leg_num].q0);
+   // UART1_print_str(" s1: ");
+   // UART1_print_div(Leg[leg_num].q1);
+   // UART1_print_str(" s2: ");
+   // UART1_println_div(Leg[leg_num].q2);
 
    Leg[leg_num].current_x = x;
    Leg[leg_num].current_y = y;
@@ -193,7 +193,7 @@ void servoManualControl(void)
       uint8_t servo1 = map(channel[1], 600, 1600, 15, 165);
       uint8_t servo2 = map(channel[2], 600, 1600, 15, 165);
 
-      UART1_print_str("s0: ");
+      UART1_print_str("s00: ");
       UART1_print_div(servo0);
       UART1_print_str(" s1: ");
       UART1_print_div(servo1);
@@ -217,15 +217,21 @@ void switchMode(void)
    else if (channel[5] < 1200 && channel[5] > 900)       //mid
    {
       //heightTest(H);
-      //rotateBody();
+      rotateBody();
       // new_version();
       // legManualControl(2);
-      moveLeg(2, 110, 110, 0);
+
+      // moveLeg(0, 110, -110, 0);
+      // moveLeg(1, 155, 0, 0);
+      // moveLeg(2, 110, 110, 0);
+      // moveLeg(3, -110, 110, 0);
+      // moveLeg(4, -155, 0, 0);
+      // moveLeg(5, -110, -110, 0);
    }
    else if (channel[5] < 700)                            //high
    {
-      // hexapodMove();
-      newVersion();
+      hexapodMove();
+      // newVersion();
       //square_test();
    }
 }
@@ -349,7 +355,7 @@ void findAngles(uint8_t leg_num, double x, double y, double z)
       break;
 
    case 1:
-      q0 = q0rad * 180 / pi + 96;		//mid right
+      q0 = q0rad * 180 / pi + 90;		//mid right
       break;
 
    case 2:
@@ -655,7 +661,7 @@ void evaluateZ(uint8_t leg_num, bool phase)
    }
 }
 
-void newVersion(void)
+void hexapodMove(void)
 {
    if (system_time >= next_time)
    {
@@ -663,7 +669,7 @@ void newVersion(void)
       UART1_println(system_time/1000);*/
 
       //if V=0 -> go to start points, reset phases for main gait and set last velocity to 0
-      if (fabs(Vx) <= 20 && fabs(Vy) <= 20 && fabs(Wz) <= 5 * DEG_TO_RAD)
+      if (fabs(Vx) <= 20 && fabs(Vy) <= 20)
       {
          moveLeg(0, local_start_point[0][0], local_start_point[0][1], -H);
          moveLeg(2, local_start_point[2][0], local_start_point[2][1], -H);
@@ -675,6 +681,125 @@ void newVersion(void)
          moveLeg(1, local_start_point[1][0], local_start_point[1][1], -H);
          moveLeg(3, local_start_point[3][0], local_start_point[3][1], -H);
          moveLeg(5, local_start_point[5][0], local_start_point[5][1], -H);
+         Leg[1].phase = 1;
+         Leg[3].phase = 1;
+         Leg[5].phase = 1;
+
+         for (uint8_t leg_num = 0; leg_num < 6; leg_num++)
+         {
+            Leg[leg_num].Vx_last = 0;
+            Leg[leg_num].Vy_last = 0;
+         }
+      }
+      else
+      {
+         //UART1_print_str("Vx: ");
+         //UART1_print_div(Vx);
+         //UART1_print_str(" Vy: ");
+         //UART1_println_div(Vy);
+
+         //double angle = 0.0;
+         //angle = getAngle(Vx, Vy);
+
+         //UART1_println_div(angle * RAD_TO_DEG);
+
+         for (uint8_t leg_num = 0; leg_num < 6; leg_num++)
+         {
+            //if phase 0 (ground moving)
+            if (phaseControl(leg_num) == 0)
+            {
+               Leg[leg_num].Xt = Leg[leg_num].current_x;
+               Leg[leg_num].Yt = Leg[leg_num].current_y;
+
+               //rotate straight movement line
+               rotateDirection(leg_num);
+
+               //simply add new velocity to current coordinates
+               Leg[leg_num].Xt = Leg[leg_num].Xt - Vx / MOVEMENT_FREQUENCY;
+               Leg[leg_num].Yt = Leg[leg_num].Yt - Vy / MOVEMENT_FREQUENCY;
+               Leg[leg_num].Zt = -H;
+            }
+            //if phase 1 (air movement)
+            else
+            {
+               Leg[leg_num].Xt = Leg[leg_num].current_x;
+               Leg[leg_num].Yt = Leg[leg_num].current_y;
+
+               //rotate straight movement line
+               rotateDirection(leg_num);
+
+               //simply add new velocity to current coordinates
+               Leg[leg_num].Xt = Leg[leg_num].Xt + Vx / MOVEMENT_FREQUENCY;
+               Leg[leg_num].Yt = Leg[leg_num].Yt + Vy / MOVEMENT_FREQUENCY;
+
+               switch (leg_num)
+               {
+               case 0:
+                  Leg[0].Zt = -k * (Leg[0].Yt + Y_OFFSET) * (Leg[0].Yt + Y_OFFSET) - k * (Leg[0].Xt - X_OFFSET) * (Leg[0].Xt - X_OFFSET) - H + dH;
+                  break;
+
+               case 1:
+                  Leg[1].Zt = -k * Leg[1].Yt * Leg[1].Yt - k * (Leg[1].Xt - X_OFFSET - 30) * (Leg[1].Xt - X_OFFSET - 30) - H + dH;
+                  break;
+
+               case 2:
+                  Leg[2].Zt = -k * (Leg[2].Yt - Y_OFFSET) * (Leg[2].Yt - Y_OFFSET) - k * (Leg[2].Xt - X_OFFSET) * (Leg[2].Xt - X_OFFSET) - H + dH;
+                  break;
+
+               case 3:
+                  Leg[3].Zt = -k * (Leg[3].Yt - Y_OFFSET) * (Leg[3].Yt - Y_OFFSET) - k * (Leg[3].Xt + X_OFFSET) * (Leg[3].Xt + X_OFFSET) - H + dH;
+                  break;
+
+               case 4:
+                  Leg[4].Zt = -k * Leg[4].Yt * Leg[4].Yt - k * (Leg[4].Xt + X_OFFSET + 30) * (Leg[4].Xt + X_OFFSET + 30) - H + dH;
+                  break;
+
+               case 5:
+                  Leg[5].Zt = -k * (Leg[5].Yt + Y_OFFSET) * (Leg[5].Yt + Y_OFFSET) - k * (Leg[5].Xt + X_OFFSET) * (Leg[5].Xt + X_OFFSET) - H + dH;
+                  break;
+               }
+            }
+
+            //save velocity for next cycle
+            Leg[leg_num].Vx_last = Vx;
+            Leg[leg_num].Vy_last = Vy;
+         }
+
+         for (uint8_t i = 0; i < 6; i++)
+         {
+            moveLeg(i, Leg[i].Xt, Leg[i].Yt, Leg[i].Zt);
+         }
+      }
+
+      next_time = system_time + MOVEMENT_PERIOD;
+   }
+}
+
+void newVersion(void)
+{
+   if (system_time >= next_time)
+   {
+      /*UART1_print_str("system time: ");
+      UART1_println(system_time/1000);*/
+
+      //if V=0 -> go to start points, reset phases for main gait and set last velocity to 0
+      if (fabs(Vx) <= 20 && fabs(Vy) <= 20 && fabs(Wz) <= 5 * DEG_TO_RAD)
+      {
+         for (uint8_t leg_num = 0; leg_num < 6; leg_num++)
+         {
+            moveLeg(leg_num, Leg[leg_num].start_x, Leg[leg_num].start_y, Leg[leg_num].start_z);
+         }
+
+         // moveLeg(0, local_start_point[0][0], local_start_point[0][1], -H);
+         // moveLeg(2, local_start_point[2][0], local_start_point[2][1], -H);
+         // moveLeg(4, local_start_point[4][0], local_start_point[4][1], -H);
+         Leg[0].phase = 0;
+         Leg[2].phase = 0;
+         Leg[4].phase = 0;
+
+         // moveLeg(1, local_start_point[1][0], local_start_point[1][1], -H);
+         // moveLeg(3, local_start_point[3][0], local_start_point[3][1], -H);
+         // moveLeg(5, local_start_point[5][0], local_start_point[5][1], -H);
          Leg[1].phase = 1;
          Leg[3].phase = 1;
          Leg[5].phase = 1;
