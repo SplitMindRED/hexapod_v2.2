@@ -13,7 +13,9 @@
 
 extern struct Master_output
 {
-   uint8_t servo[18];
+   // uint8_t servo[18];
+   uint16_t servo[18];
+
    uint8_t flags;
 }master_output;
 

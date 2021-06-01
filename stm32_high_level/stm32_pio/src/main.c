@@ -67,7 +67,8 @@ void transferFrame()
    timeout.delay = 15;
 
    //   uint8_t buffer[54];
-   uint8_t* p = (uint8_t*)&master_input;
+   uint8_t* p_master_input = (uint8_t*)&master_input;
+   uint8_t* p_master_output = (uint8_t*)&master_output;
 
    //wait for 0
    while (digitalRead(PORT_A, 8) != 0)
@@ -139,7 +140,8 @@ void transferFrame()
       //MOSI
       if (i < sizeof(master_output))
       {
-         SPI_Transfer(master_output.servo[i]);
+         // SPI_Transfer(master_output.servo[i]);
+         SPI_Transfer(*p_master_output++);
       }
       else
       {
@@ -148,7 +150,7 @@ void transferFrame()
 
       //MISO
       //buffer[i] = SPI1->DR;
-      *p++ = SPI1->DR;
+      *p_master_input++ = SPI1->DR;
 
       //wait for 1
       timeout.start_time = system_time;
