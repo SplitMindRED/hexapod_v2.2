@@ -1,14 +1,6 @@
 #include "hexapod.h"
 
 bool stop_flag = 0;
-
-#define PWM_FREQ                    200   //Hz
-
-// #define servomin  						287.0 // 100 Hz 700 mcs
-// #define servomax  						942.0 // 100 Hz 2300 mcs
-// #define servomin  						700/(1000000/PWM_FREQ/4096)
-// #define servomax  						2300/(1000000/PWM_FREQ/4096) 
-
 uint16_t servomin = 0;
 uint16_t servomax = 0;
 
@@ -176,15 +168,9 @@ void moveLeg(uint8_t leg_num, double x, double y, double z)
    // setServoAngle(leg_num * 3 + 1, (uint8_t)Leg[leg_num].q1);
    // setServoAngle(leg_num * 3 + 2, (uint8_t)Leg[leg_num].q2);
 
-   setServoAngle(leg_num * 3, Leg[leg_num].q0);
-   setServoAngle(leg_num * 3 + 1, Leg[leg_num].q1);
-   setServoAngle(leg_num * 3 + 2, Leg[leg_num].q2);
-
-   // q2 = 90 + 90 - q2;
-
-   // setServoAngle(0 * 3, q0);
-   // setServoAngle(0 * 3 + 1, q1);
-   // setServoAngle(0 * 3 + 2, q2);
+   setServoAngle(leg_num * 3, evalPWM(Leg[leg_num].q0));
+   setServoAngle(leg_num * 3 + 1, evalPWM(Leg[leg_num].q1));
+   setServoAngle(leg_num * 3 + 2, evalPWM(Leg[leg_num].q2));
 
    // UART1_print_str("s0: ");
    // UART1_print_div(Leg[leg_num].q0);
@@ -196,6 +182,40 @@ void moveLeg(uint8_t leg_num, double x, double y, double z)
    Leg[leg_num].current_x = x;
    Leg[leg_num].current_y = y;
    Leg[leg_num].current_z = z;
+}
+
+uint16_t evalPWM(float angle)
+{
+   return (uint16_t)(servomin + (servomax - servomin) * (angle - 15.0) / 150.0); //mg90d
+}
+
+uint8_t evalSum(uint8_t* p_array, uint8_t size)
+{
+   uint8_t result = 0;
+
+   for (uint8_t i = 0; i < size; i++)
+   {
+      result = result + *p_array;
+      p_array++;
+   }
+
+   return result;
+}
+
+bool checkSum(uint8_t source_sum, uint8_t* p_array, uint8_t size)
+{
+   uint8_t new_sum = 0;
+
+   new_sum = evalSum(p_array, size);
+
+   if (source_sum == new_sum)
+   {
+      return true;
+   }
+   else
+   {
+      return false;
+   }
 }
 
 // void setServoAngle(uint8_t servo_num, uint8_t Q)
@@ -220,12 +240,12 @@ void servoManualControl(void)
       float servo1 = map(channel[1], 600, 1600, servomin, servomax);
       float servo2 = map(channel[2], 600, 1600, servomin, servomax);
 
-      UART1_print_str("s00: ");
-      UART1_print_div(servo0);
-      UART1_print_str(" s1: ");
-      UART1_print_div(servo1);
-      UART1_print_str(" s2: ");
-      UART1_println_div(servo2);
+      // UART1_print_str("s0: ");
+      // UART1_print_div(servo0);
+      // UART1_print_str(" s1: ");
+      // UART1_print_div(servo1);
+      // UART1_print_str(" s2: ");
+      // UART1_println_div(servo2);
 
       setServoAngle(i, servo0);
       setServoAngle(i + 1, servo1);
@@ -244,7 +264,7 @@ void switchMode(void)
    else if (channel[5] < 1200 && channel[5] > 900)       //mid
    {
       //heightTest(H);
-      // rotateBody();
+      rotateBody();
       // new_version();
       // legManualControl(2);
 
@@ -257,7 +277,7 @@ void switchMode(void)
    }
    else if (channel[5] < 700)                            //high
    {
-      // hexapodMove();
+      hexapodMove();
       // newVersion();
       //square_test();
    }

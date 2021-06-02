@@ -1,7 +1,7 @@
 #include "splitmind_stm32f103_lib.h"
 #include "hexapod.h"
 
-#define PRINT_DATA
+// #define PRINT_DATA
 #ifdef PRINT_DATA
 #define PRINT_AC
 #define PRINT_GY
@@ -19,19 +19,19 @@
 #endif // !PRINT_DATA
 
 #ifdef PRINT_DATA_PLOT
-#define PRINT_PLOT_INA_1
-//#define PRINT_PLOT_INA_2
-//#define PRINT_PLOT_INA_3
-//#define PRINT_PLOT_INA_4
-//#define PRINT_PLOT_INA_5
-//#define PRINT_PLOT_INA_6
+// #define PRINT_PLOT_LEG_0
+// #define PRINT_PLOT_LEG_1
+#define PRINT_PLOT_LEG_2
+// #define PRINT_PLOT_LEG_3
+// #define PRINT_PLOT_LEG_4
+// #define PRINT_PLOT_LEG_5
 #endif // PRINT_DATA
 
 // #define LED_ERROR          B3
 // #define LED_WARNING        B4
 // #define LED_BT_CONNECTION  B5
 
-static double c1 = 0, c2 = 0, c3 = 0;
+static double servo_current[18];
 
 void test()
 {
@@ -64,11 +64,14 @@ void transferFrame()
 {
    SoftTimer_ms timeout;
    timeout.start_time = system_time;
-   timeout.delay = 15;
+   timeout.delay = 21;
 
    //   uint8_t buffer[54];
-   uint8_t* p_master_input = (uint8_t*)&master_input;
+   uint8_t* p_master_input = (uint8_t*)&master_input_raw;
    uint8_t* p_master_output = (uint8_t*)&master_output;
+
+   //eval control sum for output
+   master_output.sum = evalSum(p_master_output, sizeof(master_output) - 1);
 
    //wait for 0
    while (digitalRead(PORT_A, 8) != 0)
@@ -140,7 +143,6 @@ void transferFrame()
       //MOSI
       if (i < sizeof(master_output))
       {
-         // SPI_Transfer(master_output.servo[i]);
          SPI_Transfer(*p_master_output++);
       }
       else
@@ -169,6 +171,15 @@ void transferFrame()
    // Disable slave
    SPI_DisableSlave();
 
+   if (checkSum(master_input_raw.sum, (uint8_t*)&master_input_raw, sizeof(master_input_raw) - 1) == 1)
+   {
+      master_input = master_input_raw;
+   }
+   else
+   {
+      UART1_println_str("Checksum FAIL");
+   }
+
    //for (uint8_t i = 0; i < 54; i++)
    //{
    //   UART1_print_str("master ");
@@ -180,9 +191,29 @@ void transferFrame()
 
 void evalCurrent()
 {
-   c1 = (double)master_input.INA1_Ch1 * 5 / 100;
-   c2 = (double)master_input.INA1_Ch2 * 5 / 100;
-   c3 = (double)master_input.INA1_Ch3 * 5 / 100;
+   servo_current[0] = (double)master_input.INA4_Ch3 * 5 / 100;
+   servo_current[1] = (double)master_input.INA4_Ch2 * 5 / 100;
+   servo_current[2] = (double)master_input.INA4_Ch1 * 5 / 100;
+
+   servo_current[3] = (double)master_input.INA3_Ch1 * 5 / 100;
+   servo_current[4] = (double)master_input.INA3_Ch2 * 5 / 100;
+   servo_current[5] = (double)master_input.INA3_Ch3 * 5 / 100;
+
+   servo_current[6] = (double)master_input.INA2_Ch1 * 5 / 100;
+   servo_current[7] = (double)master_input.INA2_Ch2 * 5 / 100;
+   servo_current[8] = (double)master_input.INA2_Ch3 * 5 / 100;
+
+   servo_current[9] = (double)master_input.INA1_Ch1 * 5 / 100;
+   servo_current[10] = (double)master_input.INA1_Ch2 * 5 / 100;
+   servo_current[11] = (double)master_input.INA1_Ch3 * 5 / 100;
+
+   servo_current[12] = (double)master_input.INA6_Ch1 * 5 / 100;
+   servo_current[13] = (double)master_input.INA6_Ch2 * 5 / 100;
+   servo_current[14] = (double)master_input.INA6_Ch3 * 5 / 100;
+
+   servo_current[15] = (double)master_input.INA5_Ch1 * 5 / 100;
+   servo_current[16] = (double)master_input.INA5_Ch2 * 5 / 100;
+   servo_current[17] = (double)master_input.INA5_Ch3 * 5 / 100;
 }
 
 void printInputData()
@@ -285,7 +316,7 @@ void printInputData()
 
 #ifdef PRINT_DATA_PLOT
 
-#ifdef PRINT_PLOT_INA_1
+#ifdef PRINT_PLOT_LEG_0
    // UART1_print(master_input.INA1_Ch1);
    // UART1_print_str(", ");
    // UART1_print(master_input.INA1_Ch2);
@@ -293,57 +324,97 @@ void printInputData()
    // UART1_print(master_input.INA1_Ch3);
    // UART1_print_str(", ");
 
-   UART1_print_div(c1);
+   UART1_print_div(servo_current[0]);
    UART1_print_str(", ");
-   UART1_print_div(c2);
+   UART1_print_div(servo_current[1]);
    UART1_print_str(", ");
-   UART1_print_div(c3);
+   UART1_print_div(servo_current[2]);
    UART1_print_str(", ");
-#endif // PRINT_PLOT_INA_1
+#endif // PRINT_PLOT_LEG_0
 
-#ifdef PRINT_PLOT_INA_2
-   UART1_print(master_input.INA2_Ch1);
-   UART1_print_str(", ");
-   UART1_print(master_input.INA2_Ch2);
-   UART1_print_str(", ");
-   UART1_print(master_input.INA2_Ch3);
-   UART1_print_str(", ");
-#endif // PRINT_PLOT_INA_2
 
-#ifdef PRINT_PLOT_INA_3
-   UART1_print(master_input.INA3_Ch1);
-   UART1_print_str(", ");
-   UART1_print(master_input.INA3_Ch2);
-   UART1_print_str(", ");
-   UART1_print(master_input.INA3_Ch3);
-   UART1_print_str(", ");
-#endif // PRINT_PLOT_INA_3
+#ifdef PRINT_PLOT_LEG_1
+   // UART1_print(master_input.INA2_Ch1);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA2_Ch2);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA2_Ch3);
+   // UART1_print_str(", ");
 
-#ifdef PRINT_PLOT_INA_4
-   UART1_print(master_input.INA4_Ch1);
+   UART1_print_div(servo_current[3]);
    UART1_print_str(", ");
-   UART1_print(master_input.INA4_Ch2);
+   UART1_print_div(servo_current[4]);
    UART1_print_str(", ");
-   UART1_print(master_input.INA4_Ch3);
+   UART1_print_div(servo_current[5]);
    UART1_print_str(", ");
-#endif // PRINT_PLOT_INA_4
+#endif // PRINT_PLOT_LEG_1
 
-#ifdef PRINT_PLOT_INA_5
-   UART1_print(master_input.INA5_Ch1);
-   UART1_print_str(", ");
-   UART1_print(master_input.INA5_Ch2);
-   UART1_print_str(", ");
-   UART1_print(master_input.INA5_Ch3);
-   UART1_print_str(", ");
-#endif // PRINT_PLOT_INA_5
 
-#ifdef PRINT_PLOT_INA_6
-   UART1_print(master_input.INA6_Ch1);
+#ifdef PRINT_PLOT_LEG_2
+   // UART1_print(master_input.INA3_Ch1);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA3_Ch2);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA3_Ch3);
+   // UART1_print_str(", ");
+
+   UART1_print_div(servo_current[6]);
    UART1_print_str(", ");
-   UART1_print(master_input.INA6_Ch2);
+   UART1_print_div(servo_current[7]);
    UART1_print_str(", ");
-   UART1_print(master_input.INA6_Ch3);
-#endif // PRINT_PLOT_INA_6
+   UART1_print_div(servo_current[8]);
+   UART1_print_str(", ");
+#endif // PRINT_PLOT_LEG_2
+
+
+#ifdef PRINT_PLOT_LEG_3
+   // UART1_print(master_input.INA4_Ch1);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA4_Ch2);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA4_Ch3);
+   // UART1_print_str(", ");
+
+   UART1_print_div(servo_current[9]);
+   UART1_print_str(", ");
+   UART1_print_div(servo_current[10]);
+   UART1_print_str(", ");
+   UART1_print_div(servo_current[11]);
+   UART1_print_str(", ");
+#endif // PRINT_PLOT_LEG_3
+
+
+#ifdef PRINT_PLOT_LEG_4
+   // UART1_print(master_input.INA5_Ch1);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA5_Ch2);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA5_Ch3);
+   // UART1_print_str(", ");
+
+   UART1_print_div(servo_current[12]);
+   UART1_print_str(", ");
+   UART1_print_div(servo_current[13]);
+   UART1_print_str(", ");
+   UART1_print_div(servo_current[14]);
+   UART1_print_str(", ");
+#endif // PRINT_PLOT_LEG_4
+
+
+#ifdef PRINT_PLOT_LEG_5
+   // UART1_print(master_input.INA6_Ch1);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA6_Ch2);
+   // UART1_print_str(", ");
+   // UART1_print(master_input.INA6_Ch3);
+
+   UART1_print_div(servo_current[15]);
+   UART1_print_str(", ");
+   UART1_print_div(servo_current[16]);
+   UART1_print_str(", ");
+   UART1_print_div(servo_current[17]);
+   UART1_print_str(", ");
+#endif // PRINT_PLOT_LEG_5
 
    UART1_println_str(" ");
 
@@ -398,6 +469,14 @@ void setup()
 
    hexapodInit((uint8_t*)&master_output);
 
+   // const uint8_t a = sizeof(master_input);
+   // const uint8_t b = sizeof(master_output);
+
+   UART1_print_str("master input size: ");
+   UART1_print(sizeof(master_input));
+   UART1_print_str(" master output size: ");
+   UART1_println(sizeof(master_output));
+
    UART1_println_str("Done!");
 }
 
@@ -424,7 +503,7 @@ int main(void)
          //unsigned long time2 = system_time;
 
          //time1 = system_time;
-         // printInputData();
+         printInputData();
 
          // if (c2 > 250)
          // {

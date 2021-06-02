@@ -21,6 +21,11 @@
 #include "stm_spi_data_structure.h"
 #endif
 
+#define PWM_FREQ                    150   //Hz
+
+// #define servomin  						287.0 // 100 Hz 700 mcs
+// #define servomax  						942.0 // 100 Hz 2300 mcs
+
 //Hexapod parametres
 //offset from (0, 0) on XY plane in every local coordinate system of leg
 #define X_OFFSET                    70
@@ -138,8 +143,14 @@ void convertFlySkyData(void);
 
 void switchMode(void);
 
+bool checkSum(uint8_t source_sum, uint8_t* p_array, uint8_t size);
+
+uint8_t evalSum(uint8_t* p_array, uint8_t size);
+
 //inverse kinematics solution for leg: gets point (x,y,z), returns q0, q1, q2 servo angles of leg
 void findAngles(uint8_t leg_num, double x, double y, double z);
+
+uint16_t evalPWM(float angle);
 
 //rotate point (x,y) for q rad
 void rotatePoint(double* x, double* y, double q);

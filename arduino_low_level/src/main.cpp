@@ -85,6 +85,7 @@ Stopwatch watch2(MICS);
 Stopwatch watch3(MICS);
 
 SlaveInput slave_input;
+SlaveInput slave_input_raw;
 SlaveOutput slave_output;
 
 unsigned long system_time_mil = 0;
@@ -116,11 +117,45 @@ void test1()
    Serial.println(SPDR);
 }
 
+uint8_t evalSum(uint8_t* p_array, uint8_t size)
+{
+   uint8_t result = 0;
+
+   for (uint8_t i = 0; i < size; i++)
+   {
+      result += *p_array++;
+   }
+
+   return result;
+}
+
+bool checkSum(uint8_t source_sum, uint8_t* p_array, uint8_t size)
+{
+   uint8_t eval_sum = evalSum(p_array, size);
+
+   // Serial.print("Source sum: ");
+   // Serial.print(source_sum);
+   // Serial.print(" eval sum: ");
+   // Serial.println(eval_sum);
+
+   if (source_sum == eval_sum)
+   {
+      return true;
+   }
+   else
+   {
+      return false;
+   }
+}
+
 void transferFrame()
 {
    uint8_t* p_slave_output = (uint8_t*)&slave_output;
-   uint8_t* p_slave_input = (uint8_t*)&slave_input;
+   uint8_t* p_slave_input = (uint8_t*)&slave_input_raw;
    uint8_t tmp = 0;
+
+   //eval control sum for output
+   slave_output.sum = evalSum(p_slave_output, sizeof(slave_output) - 1);
 
    //ready for next byte
    digitalWrite(ACK_PIN, 0);
@@ -147,7 +182,7 @@ void transferFrame()
       //check if it is second start byte
       if (SPDR == START_BYTE_2)
       {
-         for (uint16_t byte_counter = 0; byte_counter < 54; byte_counter++)
+         for (uint16_t byte_counter = 0; byte_counter < sizeof(slave_output); byte_counter++)
          {
             if (byte_counter < sizeof(slave_output))
             {
@@ -187,10 +222,19 @@ void transferFrame()
          //   Serial.println(errors);
          //}
 
+         if (checkSum(slave_input_raw.sum, (uint8_t*)&slave_input_raw, sizeof(slave_input_raw) - 1) == 1)
+         {
+            slave_input = slave_input_raw;
+         }
+         else
+         {
+            Serial.println("Checksum FAIL");
+         }
+
          return;
       }
 
-      Serial.println("TRASH!!!!!!!!!!!");
+      Serial.println("StartByte2 FAIL");
    }
 
    //byte recieved
@@ -531,6 +575,9 @@ void setup(void)
    timer_main_loop.time_start = 0;
    timer_main_loop.delay = LOOP_PERIOD;
 
+   const uint8_t slave_input_size = sizeof(slave_input);
+   const uint8_t slave_output_size = sizeof(slave_output);
+
    if (sizeof(slave_input) > sizeof(slave_output))
    {
       bigger_struct_size = sizeof(slave_input);
@@ -539,6 +586,11 @@ void setup(void)
    {
       bigger_struct_size = sizeof(slave_output);
    }
+
+   Serial.print("Slave input size: ");
+   Serial.println(slave_input_size);
+   Serial.print("Slave output size: ");
+   Serial.println(slave_output_size);
    Serial.print("Bigger struct size: ");
    Serial.println(bigger_struct_size);
 
@@ -669,7 +721,7 @@ void loop(void)
 
       servoControl();
 
-      printInputData();
+      // printInputData();
       //printOutputData();
 
       //Serial.print("t: ");

@@ -11,14 +11,20 @@
 #define START_BYTE_2       0x18
 #define STOP_BYTE          0x18
 
+#pragma push
+#pragma pack(1)
 extern struct Master_output
 {
    // uint8_t servo[18];
    uint16_t servo[18];
 
    uint8_t flags;
-}master_output;
+   uint8_t sum;
+} master_output;
+#pragma pop
 
+#pragma push
+#pragma pack(1)
 extern struct Master_input
 {
    int16_t AcX;
@@ -56,6 +62,8 @@ extern struct Master_input
    int16_t INA6_Ch1;
    int16_t INA6_Ch2;
    int16_t INA6_Ch3;
-}master_input;
+   uint8_t sum;
+} master_input, master_input_raw;
+#pragma pop
 
 #endif
