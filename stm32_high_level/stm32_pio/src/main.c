@@ -1,17 +1,17 @@
 #include "splitmind_stm32f103_lib.h"
 #include "hexapod.h"
 
-// #define PRINT_DATA
+#define PRINT_DATA
 #ifdef PRINT_DATA
 #define PRINT_AC
 #define PRINT_GY
 //#define PRINT_MA
-#define PRINT_INA_1
-#define PRINT_INA_2
-#define PRINT_INA_3
-#define PRINT_INA_4
-#define PRINT_INA_5
-#define PRINT_INA_6
+// #define PRINT_INA_1
+// #define PRINT_INA_2
+// #define PRINT_INA_3
+// #define PRINT_INA_4
+// #define PRINT_INA_5
+// #define PRINT_INA_6
 #endif // PRINT_DATA
 
 #ifndef PRINT_DATA
@@ -21,7 +21,7 @@
 #ifdef PRINT_DATA_PLOT
 // #define PRINT_PLOT_LEG_0
 // #define PRINT_PLOT_LEG_1
-#define PRINT_PLOT_LEG_2
+// #define PRINT_PLOT_LEG_2
 // #define PRINT_PLOT_LEG_3
 // #define PRINT_PLOT_LEG_4
 // #define PRINT_PLOT_LEG_5
