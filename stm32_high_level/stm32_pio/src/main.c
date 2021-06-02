@@ -1,6 +1,8 @@
 #include "splitmind_stm32f103_lib.h"
 #include "hexapod.h"
 
+// #define SHOW_IMU
+
 #define PRINT_DATA
 #ifdef PRINT_DATA
 #define PRINT_AC
@@ -34,7 +36,6 @@
 // #define LED_BT_CONNECTION  B5
 
 static double servo_current[18];
-static double AcX, AcY, AcZ, GyX, GyY, GyZ, RadX, RadY, RadZ, GradX, GradY, GradZ;
 
 void test()
 {
@@ -229,18 +230,20 @@ void evalImuAngles()
    GyY += (double)master_input.GyY / 16.4 * (20.0 / 1000.0);
    GyZ += (double)master_input.GyZ / 16.4 * (20.0 / 1000.0);
 
-   // UART1_print_str("AcX: ");
-   // UART1_print_div(AcX);
-   // UART1_print_str(" AcY: ");
-   // UART1_print_div(AcY);
-   // UART1_print_str(" AcZ: ");
-   // UART1_print_div(AcZ);
-   // UART1_print_str(" GyX: ");
-   // UART1_print_div(GyX);
-   // UART1_print_str(" GyY: ");
-   // UART1_print_div(GyY);
-   // UART1_print_str(" GyZ: ");
-   // UART1_println_div(GyZ);
+#ifdef SHOW_IMU
+   UART1_print_str("AcX: ");
+   UART1_print_div(AcX);
+   UART1_print_str(" AcY: ");
+   UART1_print_div(AcY);
+   UART1_print_str(" AcZ: ");
+   UART1_print_div(AcZ);
+   UART1_print_str(" GyX: ");
+   UART1_print_div(GyX);
+   UART1_print_str(" GyY: ");
+   UART1_print_div(GyY);
+   UART1_print_str(" GyZ: ");
+   UART1_println_div(GyZ);
+#endif
 
    if (AcY > 0 && AcZ < 0)
    {
@@ -269,8 +272,16 @@ void evalImuAngles()
    // GradY = RadY * 180.0 / pi;
 
    //mpu has different axis directions from my axis convention
-   GradX = -RadY * 180.0 / pi;
-   GradY = RadX * 180.0 / pi;
+   // double tmp = 0;
+   // tmp = RadX;
+   // RadX = -RadY;
+   // RadY = tmp;
+
+   RadX = -GyY * DEG_TO_RAD;
+   RadY = GyX * DEG_TO_RAD;
+
+   GradX = RadX * 180.0 / pi;
+   GradY = RadY * 180.0 / pi;
 
    // UART1_print_str("Qx: ");
    // UART1_print_div(GradX);

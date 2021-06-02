@@ -16,6 +16,8 @@ float Vx = 0, Vy = 0, Vz = 0;
 float Wz = 0;
 float input_roll = 0, input_pitch = 0, input_yaw = 0;
 float current_roll = 0, current_pitch = 0, current_yaw = 0;
+double RadX = 0, RadY = 0, RadZ = 0, GradX = 0, GradY = 0, GradZ = 0;
+double AcX = 0, AcY = 0, AcZ = 0, GyX = 0, GyY = 0, GyZ = 0;
 
 //geometry variables--------------------------
 // const uint8_t OA = 37;
@@ -257,13 +259,14 @@ void switchMode(void)
    //SWC switch mode
    if (channel[5] > 1300)                                //low
    {
-      servoManualControl();
-      //rotateBody();
+      // servoManualControl();
+      stabilizationMode();
    }
    else if (channel[5] < 1200 && channel[5] > 900)       //mid
    {
       //heightTest(H);
       rotateBody();
+
       // new_version();
       // legManualControl(2);
 
@@ -311,9 +314,9 @@ void convertFlySkyData(void)
 
    k = 4 * dH / (diameter * diameter);
 
-   input_roll = map(channel[0], 600, 1600, 0.35, -0.35);
-   input_pitch = map(channel[1], 600, 1600, 0.35, -0.35);
-   input_yaw = map(channel[3], 600, 1600, 0.35, -0.35);
+   input_roll = map(channel[0], 600, 1600, 0.35, -0.35);    //right -
+   input_pitch = map(channel[1], 600, 1600, 0.35, -0.35);   //up +
+   input_yaw = map(channel[3], 600, 1600, 0.35, -0.35);     //right -
 
    if (fabs(input_roll) < 0.02)
    {
@@ -329,6 +332,15 @@ void convertFlySkyData(void)
    {
       master_output.flags &= ~FLAG_OE;
    }
+
+#ifdef SHOW_RPY
+   UART1_print_str("roll: ");
+   UART1_print_div(input_roll);
+   UART1_print_str(" pitch: ");
+   UART1_print_div(input_pitch);
+   UART1_print_str(" yaw: ");
+   UART1_println_div(input_yaw);
+#endif
 
    // Vx = map(channel[0], 600, 1600, -MAX_VEL_LINEAR, MAX_VEL_LINEAR);
 
@@ -356,6 +368,18 @@ void stabilizationMode(void)
    float p_base_new[6][3];
    float temp_x[6];
    float p_delta[6][3];
+
+   static double qx = 0;
+   static double qy = 0;
+   static double qz = 0;
+
+   qy += RadY;
+
+   UART1_print_str("RadX: ");
+   UART1_print_div(RadX);
+   UART1_print_str(" RadX: ");
+   UART1_println_div(RadY);
+
 
    //right back leg
    //X
@@ -409,12 +433,12 @@ void stabilizationMode(void)
    {
       //rotation around Y axis
       //p_base_new[i][0] = p_base[i][0] * cos(-input_roll) - p_base[i][2] * sin(-input_roll);
-      temp_x[i] = p_base[i][0] * cos(-input_roll) - p_base[i][2] * sin(-input_roll);
-      p_base_new[i][2] = p_base[i][0] * sin(-input_roll) + p_base[i][2] * cos(-input_roll);
+      temp_x[i] = p_base[i][0] * cos(-(float)RadY) - p_base[i][2] * sin(-(float)RadY);
+      p_base_new[i][2] = p_base[i][0] * sin(-(float)RadY) + p_base[i][2] * cos(-(float)RadY);
 
       //rotation around X axis
-      p_base_new[i][1] = p_base[i][1] * cos(-input_pitch) - p_base_new[i][2] * sin(-input_pitch);
-      p_base_new[i][2] = p_base[i][1] * sin(-input_pitch) + p_base_new[i][2] * cos(-input_pitch);
+      p_base_new[i][1] = p_base[i][1] * cos((float)RadX) - p_base_new[i][2] * sin((float)RadX);
+      p_base_new[i][2] = p_base[i][1] * sin((float)RadX) + p_base_new[i][2] * cos((float)RadX);
 
       //rotation around Z axis
       p_base_new[i][0] = temp_x[i] * cos(-input_yaw) - p_base_new[i][1] * sin(-input_yaw);
@@ -632,6 +656,11 @@ void rotateBody(void)
    float temp_x[6];
    float p_delta[6][3];
 
+   UART1_print_str("RadY: ");
+   UART1_print_div(RadY);
+   UART1_print_str(" input_roll: ");
+   UART1_println_div(input_roll);
+
    //right back leg
    //X
    p_base[0][0] = local_start_point[0][0] + X_TRANSLATION;
@@ -703,7 +732,9 @@ void rotateBody(void)
       Leg[i].Yt = local_start_point[i][1] + p_delta[i][1];
       Leg[i].Zt = local_start_point[i][2] + p_delta[i][2];
 
-      moveLeg(i, Leg[i].Xt, Leg[i].Yt, Leg[i].Zt);
+      // moveLeg(i, Leg[i].Xt, Leg[i].Yt, Leg[i].Zt);
+      moveLeg(1, Leg[1].Xt, Leg[1].Yt, Leg[1].Zt);
+
    }
 }
 

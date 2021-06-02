@@ -21,6 +21,8 @@
 #include "stm_spi_data_structure.h"
 #endif
 
+// #define SHOW_RPY
+
 #define PWM_FREQ                    150   //Hz
 
 // #define servomin  						287.0 // 100 Hz 700 mcs
@@ -55,8 +57,8 @@
 #define MAX_VEL_LINEAR              275         //mm/s
 #define MAX_VEL_ANGULAR             1.0472      //rad/s (60 grad)
 
-#define RAD_TO_DEG                  180 / pi
-#define DEG_TO_RAD                  pi / 180
+#define RAD_TO_DEG                  180.0 / pi
+#define DEG_TO_RAD                  pi / 180.0
 
 extern uint16_t servomin;
 extern uint16_t servomax;
@@ -71,6 +73,8 @@ extern float Vx, Vy, Vz;                                    //velocity for 3 dim
 extern float Wz;                                            //velocity for turning (grad/s)
 extern float input_roll, input_pitch, input_yaw;            //angle for 3 rotation axis
 extern float current_roll, current_pitch, current_yaw;
+extern double AcX, AcY, AcZ, GyX, GyY, GyZ, RadX, RadY, RadZ, GradX, GradY, GradZ;
+
 
 //all cordinates of this structure are 
 //in local coordinate system of each leg
