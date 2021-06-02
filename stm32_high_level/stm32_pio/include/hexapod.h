@@ -121,6 +121,7 @@ extern int16_t local_start_point[6][3];
 extern float leg_translation[6][3];
 
 extern float diameter;
+extern double pi;
 
 extern float k;
 extern float dH;
@@ -146,6 +147,8 @@ void switchMode(void);
 bool checkSum(uint8_t source_sum, uint8_t* p_array, uint8_t size);
 
 uint8_t evalSum(uint8_t* p_array, uint8_t size);
+
+void stabilizationMode(void);
 
 //inverse kinematics solution for leg: gets point (x,y,z), returns q0, q1, q2 servo angles of leg
 void findAngles(uint8_t leg_num, double x, double y, double z);

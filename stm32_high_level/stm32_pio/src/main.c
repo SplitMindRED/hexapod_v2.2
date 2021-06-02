@@ -19,6 +19,8 @@
 #endif // !PRINT_DATA
 
 #ifdef PRINT_DATA_PLOT
+// #define PRINT_PLOT_AC
+// #define PRINT_PLOT_GY
 // #define PRINT_PLOT_LEG_0
 // #define PRINT_PLOT_LEG_1
 // #define PRINT_PLOT_LEG_2
@@ -32,6 +34,7 @@
 // #define LED_BT_CONNECTION  B5
 
 static double servo_current[18];
+static double AcX, AcY, AcZ, GyX, GyY, GyZ, RadX, RadY, RadZ, GradX, GradY, GradZ;
 
 void test()
 {
@@ -214,6 +217,65 @@ void evalCurrent()
    servo_current[15] = (double)master_input.INA5_Ch1 * 5 / 100;
    servo_current[16] = (double)master_input.INA5_Ch2 * 5 / 100;
    servo_current[17] = (double)master_input.INA5_Ch3 * 5 / 100;
+}
+
+void evalImuAngles()
+{
+   AcX = (double)master_input.AcX / 2048.0;
+   AcY = (double)master_input.AcY / 2048.0;
+   AcZ = ((double)master_input.AcZ + 2048.0) / 2048.0;
+
+   GyX += (double)master_input.GyX / 16.4 * (20.0 / 1000.0);
+   GyY += (double)master_input.GyY / 16.4 * (20.0 / 1000.0);
+   GyZ += (double)master_input.GyZ / 16.4 * (20.0 / 1000.0);
+
+   // UART1_print_str("AcX: ");
+   // UART1_print_div(AcX);
+   // UART1_print_str(" AcY: ");
+   // UART1_print_div(AcY);
+   // UART1_print_str(" AcZ: ");
+   // UART1_print_div(AcZ);
+   // UART1_print_str(" GyX: ");
+   // UART1_print_div(GyX);
+   // UART1_print_str(" GyY: ");
+   // UART1_print_div(GyY);
+   // UART1_print_str(" GyZ: ");
+   // UART1_println_div(GyZ);
+
+   if (AcY > 0 && AcZ < 0)
+   {
+      RadX = 1.57079 - atan(AcZ / AcY);
+   }
+   else if (AcY < 0 && AcZ < 0)
+   {
+      RadX = -1.57079 - atan(AcZ / AcY);
+   }
+   else RadX = atan(AcY / AcZ);
+
+   if (AcX < 0 && AcZ < 0)
+   {
+      RadY = 1.57079 + atan(AcZ / AcX);
+   }
+   else if (AcX > 0 && AcZ < 0)
+   {
+      RadY = -1.57079 + atan(AcZ / AcX);
+   }
+   else
+   {
+      RadY = -atan(AcX / AcZ);
+   }
+
+   // GradX = RadX * 180.0 / pi;
+   // GradY = RadY * 180.0 / pi;
+
+   //mpu has different axis directions from my axis convention
+   GradX = -RadY * 180.0 / pi;
+   GradY = RadX * 180.0 / pi;
+
+   // UART1_print_str("Qx: ");
+   // UART1_print_div(GradX);
+   // UART1_print_str(" Qy: ");
+   // UART1_println_div(GradY);
 }
 
 void printInputData()
@@ -503,7 +565,8 @@ int main(void)
          //unsigned long time2 = system_time;
 
          //time1 = system_time;
-         printInputData();
+         // printInputData();
+         evalImuAngles();
 
          // if (c2 > 250)
          // {

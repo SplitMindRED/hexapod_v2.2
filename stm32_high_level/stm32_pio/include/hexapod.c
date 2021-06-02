@@ -218,7 +218,6 @@ bool checkSum(uint8_t source_sum, uint8_t* p_array, uint8_t size)
    }
 }
 
-// void setServoAngle(uint8_t servo_num, uint8_t Q)
 void setServoAngle(uint8_t servo_num, uint16_t PWM)
 {
    //put angle to master output structure
@@ -348,6 +347,89 @@ void convertFlySkyData(void)
    // UART1_println(master_output.servo[0]);
    // UART1_print_str(" angle float: ");
    // UART1_println(servo0);
+}
+
+void stabilizationMode(void)
+{
+   //leg tips's coordinates in central CS (coordinate system)
+   float p_base[6][3];
+   float p_base_new[6][3];
+   float temp_x[6];
+   float p_delta[6][3];
+
+   //right back leg
+   //X
+   p_base[0][0] = local_start_point[0][0] + X_TRANSLATION;
+   //Y
+   p_base[0][1] = local_start_point[0][1] - Y_TRANSLATION;
+   //Z
+   p_base[0][2] = local_start_point[0][2];
+
+   //right middle leg
+   //X
+   p_base[1][0] = local_start_point[1][0] + X_TRANSLATION_MID;
+   //Y
+   p_base[1][1] = local_start_point[1][1];
+   //Z
+   p_base[1][2] = local_start_point[1][2];
+
+   //right front leg
+   //X
+   p_base[2][0] = local_start_point[2][0] + X_TRANSLATION;
+   //Y
+   p_base[2][1] = local_start_point[2][1] + Y_TRANSLATION;
+   //Z
+   p_base[2][2] = local_start_point[2][2];
+
+   //left front leg
+   //X
+   p_base[3][0] = local_start_point[3][0] - X_TRANSLATION;
+   //Y
+   p_base[3][1] = local_start_point[3][1] + Y_TRANSLATION;
+   //Z
+   p_base[3][2] = local_start_point[3][2];
+
+   //left middle leg
+   //X
+   p_base[4][0] = local_start_point[4][0] - X_TRANSLATION_MID;
+   //Y
+   p_base[4][1] = local_start_point[4][1];
+   //Z
+   p_base[4][2] = local_start_point[4][2];
+
+   //left back leg
+   //X
+   p_base[5][0] = local_start_point[5][0] - X_TRANSLATION;
+   //Y
+   p_base[5][1] = local_start_point[5][1] - Y_TRANSLATION;
+   //Z
+   p_base[5][2] = local_start_point[5][2];
+
+   for (uint8_t i = 0; i < 6; i++)
+   {
+      //rotation around Y axis
+      //p_base_new[i][0] = p_base[i][0] * cos(-input_roll) - p_base[i][2] * sin(-input_roll);
+      temp_x[i] = p_base[i][0] * cos(-input_roll) - p_base[i][2] * sin(-input_roll);
+      p_base_new[i][2] = p_base[i][0] * sin(-input_roll) + p_base[i][2] * cos(-input_roll);
+
+      //rotation around X axis
+      p_base_new[i][1] = p_base[i][1] * cos(-input_pitch) - p_base_new[i][2] * sin(-input_pitch);
+      p_base_new[i][2] = p_base[i][1] * sin(-input_pitch) + p_base_new[i][2] * cos(-input_pitch);
+
+      //rotation around Z axis
+      p_base_new[i][0] = temp_x[i] * cos(-input_yaw) - p_base_new[i][1] * sin(-input_yaw);
+      p_base_new[i][1] = temp_x[i] * sin(-input_yaw) + p_base_new[i][1] * cos(-input_yaw);
+
+      p_delta[i][0] = p_base_new[i][0] - p_base[i][0];
+      p_delta[i][1] = p_base_new[i][1] - p_base[i][1];
+      p_delta[i][2] = p_base_new[i][2] - p_base[i][2];
+
+      Leg[i].Xt = local_start_point[i][0] + p_delta[i][0];
+      Leg[i].Yt = local_start_point[i][1] + p_delta[i][1];
+      Leg[i].Zt = local_start_point[i][2] + p_delta[i][2];
+
+      moveLeg(i, Leg[i].Xt, Leg[i].Yt, Leg[i].Zt);
+   }
 }
 
 void findAngles(uint8_t leg_num, double x, double y, double z)
