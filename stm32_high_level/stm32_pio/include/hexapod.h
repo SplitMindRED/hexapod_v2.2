@@ -187,7 +187,7 @@ void evaluateZ(uint8_t leg_num, bool phase);
 bool phaseControl(uint8_t leg_num);
 
 //rotate body in 3 axis
-void rotateBody(void);
+void rotateBody(double Qx, double Qy, double Qz);
 
 //function with first gait movement
 void hexapodMove(void);

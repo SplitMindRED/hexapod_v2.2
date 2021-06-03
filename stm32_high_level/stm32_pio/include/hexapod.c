@@ -265,7 +265,7 @@ void switchMode(void)
    else if (channel[5] < 1200 && channel[5] > 900)       //mid
    {
       //heightTest(H);
-      rotateBody();
+      rotateBody(input_roll, input_pitch, input_yaw);
 
       // new_version();
       // legManualControl(2);
@@ -363,96 +363,99 @@ void convertFlySkyData(void)
 
 void stabilizationMode(void)
 {
-   //leg tips's coordinates in central CS (coordinate system)
-   float p_base[6][3];
-   float p_base_new[6][3];
-   float temp_x[6];
-   float p_delta[6][3];
-
    static double qx = 0;
    static double qy = 0;
+   static double qx_sum = 0;
+   static double qy_sum = 0;
+
    static double qz = 0;
 
-   qy += RadY;
+   static const uint8_t avr = 10;
+   static bool is_arr_full = false;
 
-   UART1_print_str("RadX: ");
-   UART1_print_div(RadX);
-   UART1_print_str(" RadX: ");
-   UART1_println_div(RadY);
+   static double qx_arr[avr];
+   static double qy_arr[avr];
 
+   static uint16_t counter = 0;
 
-   //right back leg
-   //X
-   p_base[0][0] = local_start_point[0][0] + X_TRANSLATION;
-   //Y
-   p_base[0][1] = local_start_point[0][1] - Y_TRANSLATION;
-   //Z
-   p_base[0][2] = local_start_point[0][2];
+   // UART1_print_str("RadX: ");
+   // UART1_print_div(RadX);
+   // UART1_print_str(" RadX: ");
+   // UART1_println_div(RadY);
 
-   //right middle leg
-   //X
-   p_base[1][0] = local_start_point[1][0] + X_TRANSLATION_MID;
-   //Y
-   p_base[1][1] = local_start_point[1][1];
-   //Z
-   p_base[1][2] = local_start_point[1][2];
+   static uint16_t counter1 = 0;
 
-   //right front leg
-   //X
-   p_base[2][0] = local_start_point[2][0] + X_TRANSLATION;
-   //Y
-   p_base[2][1] = local_start_point[2][1] + Y_TRANSLATION;
-   //Z
-   p_base[2][2] = local_start_point[2][2];
+   counter1++;
+   // RadX = counter1;
+   // RadY = counter1;
 
-   //left front leg
-   //X
-   p_base[3][0] = local_start_point[3][0] - X_TRANSLATION;
-   //Y
-   p_base[3][1] = local_start_point[3][1] + Y_TRANSLATION;
-   //Z
-   p_base[3][2] = local_start_point[3][2];
-
-   //left middle leg
-   //X
-   p_base[4][0] = local_start_point[4][0] - X_TRANSLATION_MID;
-   //Y
-   p_base[4][1] = local_start_point[4][1];
-   //Z
-   p_base[4][2] = local_start_point[4][2];
-
-   //left back leg
-   //X
-   p_base[5][0] = local_start_point[5][0] - X_TRANSLATION;
-   //Y
-   p_base[5][1] = local_start_point[5][1] - Y_TRANSLATION;
-   //Z
-   p_base[5][2] = local_start_point[5][2];
-
-   for (uint8_t i = 0; i < 6; i++)
+   //first filling
+   if (is_arr_full == false)
    {
-      //rotation around Y axis
-      //p_base_new[i][0] = p_base[i][0] * cos(-input_roll) - p_base[i][2] * sin(-input_roll);
-      temp_x[i] = p_base[i][0] * cos(-(float)RadY) - p_base[i][2] * sin(-(float)RadY);
-      p_base_new[i][2] = p_base[i][0] * sin(-(float)RadY) + p_base[i][2] * cos(-(float)RadY);
+      qx_arr[counter] = RadX;
+      qy_arr[counter] = RadY;
+      counter++;
 
-      //rotation around X axis
-      p_base_new[i][1] = p_base[i][1] * cos((float)RadX) - p_base_new[i][2] * sin((float)RadX);
-      p_base_new[i][2] = p_base[i][1] * sin((float)RadX) + p_base_new[i][2] * cos((float)RadX);
+      if (counter == avr)
+      {
+         is_arr_full = true;
+         counter = 0;
 
-      //rotation around Z axis
-      p_base_new[i][0] = temp_x[i] * cos(-input_yaw) - p_base_new[i][1] * sin(-input_yaw);
-      p_base_new[i][1] = temp_x[i] * sin(-input_yaw) + p_base_new[i][1] * cos(-input_yaw);
+         for (uint16_t i = 0; i < avr; i++)
+         {
+            qx_sum += qx_arr[i];
+            qy_sum += qy_arr[i];
+         }
 
-      p_delta[i][0] = p_base_new[i][0] - p_base[i][0];
-      p_delta[i][1] = p_base_new[i][1] - p_base[i][1];
-      p_delta[i][2] = p_base_new[i][2] - p_base[i][2];
+         qx = qx_sum / (double)avr;
+         qy = qy_sum / (double)avr;
 
-      Leg[i].Xt = local_start_point[i][0] + p_delta[i][0];
-      Leg[i].Yt = local_start_point[i][1] + p_delta[i][1];
-      Leg[i].Zt = local_start_point[i][2] + p_delta[i][2];
+         UART1_print_str("QavrX: ");
+         UART1_print_div(qx);
+         UART1_print_str(" QavrY: ");
+         UART1_print_div(qy);
+         UART1_print_str(" RadX: ");
+         UART1_print_div(RadX);
+         UART1_print_str(" RadY: ");
+         UART1_println_div(RadY);
 
-      moveLeg(i, Leg[i].Xt, Leg[i].Yt, Leg[i].Zt);
+         rotateBody(-qx, qy, 0.0);
+
+         qx_sum -= qx_arr[counter];
+         qy_sum -= qy_arr[counter];
+      }
+   }
+   else
+   {
+      qx_arr[counter] = RadX;
+      qy_arr[counter] = RadY;
+
+      qx_sum += qx_arr[counter];
+      qy_sum += qy_arr[counter];
+
+      qx = qx_sum / (double)avr;
+      qy = qy_sum / (double)avr;
+
+      UART1_print_str("QavrX: ");
+      UART1_print_div(qx);
+      UART1_print_str(" QavrY: ");
+      UART1_print_div(qy);
+      UART1_print_str(" RadX: ");
+      UART1_print_div(RadX);
+      UART1_print_str(" RadY: ");
+      UART1_println_div(RadY);
+
+      rotateBody(-qx, qy, 0.0);
+
+      counter++;
+
+      if (counter == avr)
+      {
+         counter = 0;
+      }
+
+      qx_sum -= qx_arr[counter];
+      qy_sum -= qy_arr[counter];
    }
 }
 
@@ -648,18 +651,13 @@ bool phaseControl(uint8_t leg_num)
    return Leg[leg_num].phase;
 }
 
-void rotateBody(void)
+void rotateBody(double Qx, double Qy, double Qz)
 {
    //leg tips's coordinates in central CS (coordinate system)
    float p_base[6][3];
    float p_base_new[6][3];
    float temp_x[6];
    float p_delta[6][3];
-
-   UART1_print_str("RadY: ");
-   UART1_print_div(RadY);
-   UART1_print_str(" input_roll: ");
-   UART1_println_div(input_roll);
 
    //right back leg
    //X
@@ -713,16 +711,16 @@ void rotateBody(void)
    {
       //rotation around Y axis
       //p_base_new[i][0] = p_base[i][0] * cos(-input_roll) - p_base[i][2] * sin(-input_roll);
-      temp_x[i] = p_base[i][0] * cos(-input_roll) - p_base[i][2] * sin(-input_roll);
-      p_base_new[i][2] = p_base[i][0] * sin(-input_roll) + p_base[i][2] * cos(-input_roll);
+      temp_x[i] = p_base[i][0] * cos(-Qy) - p_base[i][2] * sin(-Qy);
+      p_base_new[i][2] = p_base[i][0] * sin(-Qy) + p_base[i][2] * cos(-Qy); //-input_roll
 
       //rotation around X axis
-      p_base_new[i][1] = p_base[i][1] * cos(-input_pitch) - p_base_new[i][2] * sin(-input_pitch);
-      p_base_new[i][2] = p_base[i][1] * sin(-input_pitch) + p_base_new[i][2] * cos(-input_pitch);
+      p_base_new[i][1] = p_base[i][1] * cos(-Qx) - p_base_new[i][2] * sin(-Qx);
+      p_base_new[i][2] = p_base[i][1] * sin(-Qx) + p_base_new[i][2] * cos(-Qx);  //-input_pitch
 
       //rotation around Z axis
-      p_base_new[i][0] = temp_x[i] * cos(-input_yaw) - p_base_new[i][1] * sin(-input_yaw);
-      p_base_new[i][1] = temp_x[i] * sin(-input_yaw) + p_base_new[i][1] * cos(-input_yaw);
+      p_base_new[i][0] = temp_x[i] * cos(-Qz) - p_base_new[i][1] * sin(-Qz);
+      p_base_new[i][1] = temp_x[i] * sin(-Qz) + p_base_new[i][1] * cos(-Qz);   //-input_yaw
 
       p_delta[i][0] = p_base_new[i][0] - p_base[i][0];
       p_delta[i][1] = p_base_new[i][1] - p_base[i][1];
@@ -732,9 +730,7 @@ void rotateBody(void)
       Leg[i].Yt = local_start_point[i][1] + p_delta[i][1];
       Leg[i].Zt = local_start_point[i][2] + p_delta[i][2];
 
-      // moveLeg(i, Leg[i].Xt, Leg[i].Yt, Leg[i].Zt);
-      moveLeg(1, Leg[1].Xt, Leg[1].Yt, Leg[1].Zt);
-
+      moveLeg(i, Leg[i].Xt, Leg[i].Yt, Leg[i].Zt);
    }
 }
 
