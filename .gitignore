@@ -5,3 +5,4 @@ stm32_high_level/keil/RTE
 stm32_high_level/keil/*.Maxim
 stm32_high_level/keil/*.uvoptx
 stm32_high_level/keil/EventRecorderStub.scvd
+plots/~$INA3221 data.xlsx

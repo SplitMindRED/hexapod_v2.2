@@ -3,7 +3,7 @@
 
 // #define SHOW_IMU
 
-#define PRINT_DATA
+// #define PRINT_DATA
 #ifdef PRINT_DATA
 #define PRINT_AC
 #define PRINT_GY
@@ -25,7 +25,7 @@
 // #define PRINT_PLOT_GY
 // #define PRINT_PLOT_LEG_0
 // #define PRINT_PLOT_LEG_1
-// #define PRINT_PLOT_LEG_2
+#define PRINT_PLOT_LEG_2
 // #define PRINT_PLOT_LEG_3
 // #define PRINT_PLOT_LEG_4
 // #define PRINT_PLOT_LEG_5
@@ -570,6 +570,7 @@ int main(void)
 
          convertFlySkyData();
          switchMode();
+         // senseTest(servo_current[8]);
 
          //unsigned long time1 = system_time;
          transferFrame();
@@ -577,14 +578,8 @@ int main(void)
          //unsigned long time2 = system_time;
 
          //time1 = system_time;
-         // printInputData();
+         printInputData();
          evalImuAngles();
-
-         // if (c2 > 250)
-         // {
-         //    delay(1000);
-         //    stop_flag = 1;
-         // }
 
          //time2 = system_time;
          // convertPPMtoAngle();

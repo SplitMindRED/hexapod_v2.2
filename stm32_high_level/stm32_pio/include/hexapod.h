@@ -66,15 +66,12 @@ extern uint16_t servomax;
 extern uint16_t channel[6];
 // bool servo_enable;
 
-extern bool stop_flag;
-
 //extern bool servo_enable;                                   //flag for enabling servo
 extern float Vx, Vy, Vz;                                    //velocity for 3 dimensions (mm/s)
 extern float Wz;                                            //velocity for turning (grad/s)
 extern float input_roll, input_pitch, input_yaw;            //angle for 3 rotation axis
 extern float current_roll, current_pitch, current_yaw;
 extern double AcX, AcY, AcZ, GyX, GyY, GyZ, RadX, RadY, RadZ, GradX, GradY, GradZ;
-
 
 //all cordinates of this structure are 
 //in local coordinate system of each leg
@@ -137,6 +134,8 @@ extern unsigned long next_time;
 //hexapod initialisation, moving legs to start positions
 void hexapodInit(uint8_t* l_p_angle_array);
 
+void senseTest(double servo_current);
+
 void squareTest(void);
 
 //convert data from FlySky reciever channels to velocities and rotate angles
@@ -152,7 +151,7 @@ bool checkSum(uint8_t source_sum, uint8_t* p_array, uint8_t size);
 
 uint8_t evalSum(uint8_t* p_array, uint8_t size);
 
-void stabilizationMode(void);
+void stabilizationMode(bool is_move);
 
 //inverse kinematics solution for leg: gets point (x,y,z), returns q0, q1, q2 servo angles of leg
 void findAngles(uint8_t leg_num, double x, double y, double z);
@@ -187,7 +186,7 @@ void evaluateZ(uint8_t leg_num, bool phase);
 bool phaseControl(uint8_t leg_num);
 
 //rotate body in 3 axis
-void rotateBody(double Qx, double Qy, double Qz);
+void rotateBody(double Qx, double Qy, double Qz, bool is_move);
 
 //function with first gait movement
 void hexapodMove(void);

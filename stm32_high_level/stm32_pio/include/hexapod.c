@@ -1,6 +1,5 @@
 #include "hexapod.h"
 
-bool stop_flag = 0;
 uint16_t servomin = 0;
 uint16_t servomax = 0;
 
@@ -260,12 +259,12 @@ void switchMode(void)
    if (channel[5] > 1300)                                //low
    {
       // servoManualControl();
-      stabilizationMode();
+      stabilizationMode(1);
    }
    else if (channel[5] < 1200 && channel[5] > 900)       //mid
    {
       //heightTest(H);
-      rotateBody(input_roll, input_pitch, input_yaw);
+      rotateBody(input_roll, input_pitch, input_yaw, 1);
 
       // new_version();
       // legManualControl(2);
@@ -279,7 +278,7 @@ void switchMode(void)
    }
    else if (channel[5] < 700)                            //high
    {
-      hexapodMove();
+      // hexapodMove();
       // newVersion();
       //square_test();
    }
@@ -361,7 +360,7 @@ void convertFlySkyData(void)
    // UART1_println(servo0);
 }
 
-void stabilizationMode(void)
+void stabilizationMode(bool is_move)
 {
    static double qx = 0;
    static double qy = 0;
@@ -410,22 +409,21 @@ void stabilizationMode(void)
          qy = qy_sum / (double)avr;
          qz = qz_sum / (double)avr;
 
-         UART1_print_str("QavrX: ");
-         UART1_print_div(qx);
-         UART1_print_str(" QavrY: ");
-         UART1_print_div(qy);
-         UART1_print_str(" QavrZ: ");
-         UART1_print_div(qz);
-         UART1_print_str(" RadX: ");
-         UART1_print_div(RadX);
-         UART1_print_str(" RadY: ");
-         UART1_print_div(RadY);
-         UART1_print_str(" RadZ: ");
-         UART1_println_div(RadZ);
+         // UART1_print_str("QavrX: ");
+         // UART1_print_div(qx);
+         // UART1_print_str(" QavrY: ");
+         // UART1_print_div(qy);
+         // UART1_print_str(" QavrZ: ");
+         // UART1_print_div(qz);
+         // UART1_print_str(" RadX: ");
+         // UART1_print_div(RadX);
+         // UART1_print_str(" RadY: ");
+         // UART1_print_div(RadY);
+         // UART1_print_str(" RadZ: ");
+         // UART1_println_div(RadZ);
 
-         // rotateBody(-qx, qy, qz);
-         rotateBody(-qx, qy, 0.0);
-
+         // rotateBody(-qx, qy, qz, is_move);
+         rotateBody(-qx, qy, 0.0, is_move);
 
          qx_sum -= qx_arr[counter];
          qy_sum -= qy_arr[counter];
@@ -446,21 +444,21 @@ void stabilizationMode(void)
       qy = qy_sum / (double)avr;
       qz = qz_sum / (double)avr;
 
-      UART1_print_str("QavrX: ");
-      UART1_print_div(qx);
-      UART1_print_str(" QavrY: ");
-      UART1_print_div(qy);
-      UART1_print_str(" QavrZ: ");
-      UART1_print_div(qz);
-      UART1_print_str(" RadX: ");
-      UART1_print_div(RadX);
-      UART1_print_str(" RadY: ");
-      UART1_print_div(RadY);
-      UART1_print_str(" RadZ: ");
-      UART1_println_div(RadZ);
+      // UART1_print_str("QavrX: ");
+      // UART1_print_div(qx);
+      // UART1_print_str(" QavrY: ");
+      // UART1_print_div(qy);
+      // UART1_print_str(" QavrZ: ");
+      // UART1_print_div(qz);
+      // UART1_print_str(" RadX: ");
+      // UART1_print_div(RadX);
+      // UART1_print_str(" RadY: ");
+      // UART1_print_div(RadY);
+      // UART1_print_str(" RadZ: ");
+      // UART1_println_div(RadZ);
 
-      // rotateBody(-qx, qy, qz);
-      rotateBody(-qx, qy, 0.0);
+      // rotateBody(-qx, qy, qz, is_move);
+      rotateBody(-qx, qy, 0.0, is_move);
 
       counter++;
 
@@ -667,7 +665,7 @@ bool phaseControl(uint8_t leg_num)
    return Leg[leg_num].phase;
 }
 
-void rotateBody(double Qx, double Qy, double Qz)
+void rotateBody(double Qx, double Qy, double Qz, bool is_move)
 {
    //leg tips's coordinates in central CS (coordinate system)
    float p_base[6][3];
@@ -746,7 +744,10 @@ void rotateBody(double Qx, double Qy, double Qz)
       Leg[i].Yt = local_start_point[i][1] + p_delta[i][1];
       Leg[i].Zt = local_start_point[i][2] + p_delta[i][2];
 
-      moveLeg(i, Leg[i].Xt, Leg[i].Yt, Leg[i].Zt);
+      if (is_move)
+      {
+         moveLeg(i, Leg[i].Xt, Leg[i].Yt, Leg[i].Zt);
+      }
    }
 }
 
@@ -1160,38 +1161,114 @@ void squareTest(void)
    UART1_println_div(q2);
 }
 
-void legManualControl(uint8_t leg_num)
+void senseTest(double servo_current)
 {
    static double height = -70;
+   static double h_max = -40;
+   static double h_min = -80;
    static bool direction = 1;
    static double delta = 0.5;
+   static double Vh = 0;
+   static bool stop_flag = false;
+   static bool flag_init = false;
 
-   if (stop_flag == 1)
+   static SoftTimer_ms stop_timer;
+
+   if (flag_init == false)
    {
-      direction = !direction;
-      stop_flag = 0;
+      Vh = delta;
+      stop_timer.delay = 0;
+      stop_timer.start_time = system_time;
+
+      flag_init = true;
    }
 
-   if (direction == 1)
-   {
-      height += delta;
 
-      if (height > -80)
+   if (checkTimer(&stop_timer))
+   {
+      if (stop_flag == 1)
       {
-         direction = 0;
+         stop_timer.delay = 0;
+         stop_flag = 0;
       }
-   }
-   else
-   {
-      height -= delta;
 
-      if (height < -120)
+      if (height >= h_max)
       {
-         direction = 1;
+         Vh = -delta;
       }
-   }
+      else if (height < h_min)
+      {
+         Vh = delta;
+      }
 
-   moveLeg(leg_num, Leg[leg_num].current_x, Leg[leg_num].current_y, height);
+      if (Vh < 0.0 && servo_current > 90)
+      {
+         stop_flag = true;
+         stop_timer.delay = 1000;
+         stop_timer.start_time = system_time;
+         Vh = delta;
+
+         UART1_print_str("stop h ");
+         UART1_println_div(height);
+
+         return;
+      }
+
+      height += Vh;
+
+      // UART1_print_str("h ");
+      // UART1_println_div(height);
+
+      stabilizationMode(0);
+
+      moveLeg(2, Leg[2].current_x, Leg[2].current_y, height);
+
+      moveLeg(0, Leg[0].Xt, Leg[0].Yt, Leg[0].Zt);
+      moveLeg(1, Leg[1].Xt, Leg[1].Yt, Leg[1].Zt);
+      moveLeg(3, Leg[3].Xt, Leg[3].Yt, Leg[3].Zt);
+      moveLeg(4, Leg[4].Xt, Leg[4].Yt, Leg[4].Zt);
+      moveLeg(5, Leg[5].Xt, Leg[5].Yt, Leg[5].Zt);
+
+      // moveLeg(0, Leg[0].current_x, Leg[0].current_y, Leg[0].current_z);
+      // moveLeg(1, Leg[1].current_x, Leg[1].current_y, Leg[1].current_z);
+      // moveLeg(3, Leg[3].current_x, Leg[3].current_y, Leg[3].current_z);
+      // moveLeg(4, Leg[4].current_x, Leg[4].current_y, Leg[4].current_z);
+      // moveLeg(5, Leg[5].current_x, Leg[5].current_y, Leg[5].current_z);
+   }
+}
+
+void legManualControl(uint8_t leg_num)
+{
+   // static double height = -70;
+   // static bool direction = 1;
+   // static double delta = 0.5;
+
+   // if (stop_flag == 1)
+   // {
+   //    direction = !direction;
+   //    stop_flag = 0;
+   // }
+
+   // if (direction == 1)
+   // {
+   //    height += delta;
+
+   //    if (height > -80)
+   //    {
+   //       direction = 0;
+   //    }
+   // }
+   // else
+   // {
+   //    height -= delta;
+
+   //    if (height < -120)
+   //    {
+   //       direction = 1;
+   //    }
+   // }
+
+   // moveLeg(leg_num, Leg[leg_num].current_x, Leg[leg_num].current_y, height);
 
    // UART1_print_div(Leg[2].q0);
    // UART1_print_str(", ");
