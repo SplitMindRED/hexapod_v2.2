@@ -279,6 +279,7 @@ void evalImuAngles()
 
    RadX = -GyY * DEG_TO_RAD;
    RadY = GyX * DEG_TO_RAD;
+   RadZ = GyZ * DEG_TO_RAD;
 
    GradX = RadX * 180.0 / pi;
    GradY = RadY * 180.0 / pi;

@@ -365,16 +365,18 @@ void stabilizationMode(void)
 {
    static double qx = 0;
    static double qy = 0;
+   static double qz = 0;
+
    static double qx_sum = 0;
    static double qy_sum = 0;
-
-   static double qz = 0;
+   static double qz_sum = 0;
 
    static const uint8_t avr = 10;
    static bool is_arr_full = false;
 
    static double qx_arr[avr];
    static double qy_arr[avr];
+   static double qz_arr[avr];
 
    static uint16_t counter = 0;
 
@@ -383,17 +385,13 @@ void stabilizationMode(void)
    // UART1_print_str(" RadX: ");
    // UART1_println_div(RadY);
 
-   static uint16_t counter1 = 0;
-
-   counter1++;
-   // RadX = counter1;
-   // RadY = counter1;
-
    //first filling
    if (is_arr_full == false)
    {
       qx_arr[counter] = RadX;
       qy_arr[counter] = RadY;
+      qz_arr[counter] = RadZ;
+
       counter++;
 
       if (counter == avr)
@@ -405,46 +403,63 @@ void stabilizationMode(void)
          {
             qx_sum += qx_arr[i];
             qy_sum += qy_arr[i];
+            qz_sum += qz_arr[i];
          }
 
          qx = qx_sum / (double)avr;
          qy = qy_sum / (double)avr;
+         qz = qz_sum / (double)avr;
 
          UART1_print_str("QavrX: ");
          UART1_print_div(qx);
          UART1_print_str(" QavrY: ");
          UART1_print_div(qy);
+         UART1_print_str(" QavrZ: ");
+         UART1_print_div(qz);
          UART1_print_str(" RadX: ");
          UART1_print_div(RadX);
          UART1_print_str(" RadY: ");
-         UART1_println_div(RadY);
+         UART1_print_div(RadY);
+         UART1_print_str(" RadZ: ");
+         UART1_println_div(RadZ);
 
+         // rotateBody(-qx, qy, qz);
          rotateBody(-qx, qy, 0.0);
+
 
          qx_sum -= qx_arr[counter];
          qy_sum -= qy_arr[counter];
+         qz_sum -= qz_arr[counter];
       }
    }
    else
    {
       qx_arr[counter] = RadX;
       qy_arr[counter] = RadY;
+      qz_arr[counter] = RadZ;
 
       qx_sum += qx_arr[counter];
       qy_sum += qy_arr[counter];
+      qz_sum += qz_arr[counter];
 
       qx = qx_sum / (double)avr;
       qy = qy_sum / (double)avr;
+      qz = qz_sum / (double)avr;
 
       UART1_print_str("QavrX: ");
       UART1_print_div(qx);
       UART1_print_str(" QavrY: ");
       UART1_print_div(qy);
+      UART1_print_str(" QavrZ: ");
+      UART1_print_div(qz);
       UART1_print_str(" RadX: ");
       UART1_print_div(RadX);
       UART1_print_str(" RadY: ");
-      UART1_println_div(RadY);
+      UART1_print_div(RadY);
+      UART1_print_str(" RadZ: ");
+      UART1_println_div(RadZ);
 
+      // rotateBody(-qx, qy, qz);
       rotateBody(-qx, qy, 0.0);
 
       counter++;
@@ -456,6 +471,7 @@ void stabilizationMode(void)
 
       qx_sum -= qx_arr[counter];
       qy_sum -= qy_arr[counter];
+      qz_sum -= qz_arr[counter];
    }
 }
 

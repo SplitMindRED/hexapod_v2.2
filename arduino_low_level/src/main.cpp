@@ -523,6 +523,9 @@ void setup(void)
    Serial.println("Setup...");
 #endif
 
+   pinMode(13, OUTPUT);
+   digitalWrite(13, 0);
+
    //pins for output enble of PCA9685
    pinMode(OE_1, OUTPUT);
    pinMode(OE_2, OUTPUT);
@@ -675,6 +678,8 @@ void setup(void)
    //Serial.print(t);
    //Serial.print(" t2: ");
    //Serial.println(t2);
+
+   digitalWrite(13, 1);
 
 #ifdef SETUP_INFO
    Serial.print("Time init in micros: ");
