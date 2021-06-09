@@ -72,6 +72,7 @@ extern float Wz;                                            //velocity for turni
 extern float input_roll, input_pitch, input_yaw;            //angle for 3 rotation axis
 extern float current_roll, current_pitch, current_yaw;
 extern double AcX, AcY, AcZ, GyX, GyY, GyZ, RadX, RadY, RadZ, GradX, GradY, GradZ;
+extern double servo_current[18];
 
 //all cordinates of this structure are 
 //in local coordinate system of each leg
@@ -119,6 +120,8 @@ extern struct Legs
 } Leg[6];
 
 extern int16_t local_start_point[6][3];
+extern int16_t local_stabilization_point[6][3];
+
 extern float leg_translation[6][3];
 
 extern float diameter;
@@ -134,9 +137,13 @@ extern unsigned long next_time;
 //hexapod initialisation, moving legs to start positions
 void hexapodInit(uint8_t* l_p_angle_array);
 
-void senseTest(double servo_current);
+void senseTest(void);
+
+void senseTest1(void);
 
 void squareTest(void);
+
+void evalCurrent(void);
 
 //convert data from FlySky reciever channels to velocities and rotate angles
 void servoManualControl(void);

@@ -25,17 +25,15 @@
 // #define PRINT_PLOT_GY
 // #define PRINT_PLOT_LEG_0
 // #define PRINT_PLOT_LEG_1
-#define PRINT_PLOT_LEG_2
+// #define PRINT_PLOT_LEG_2
 // #define PRINT_PLOT_LEG_3
 // #define PRINT_PLOT_LEG_4
-// #define PRINT_PLOT_LEG_5
+#define PRINT_PLOT_LEG_5
 #endif // PRINT_DATA
 
 // #define LED_ERROR          B3
 // #define LED_WARNING        B4
 // #define LED_BT_CONNECTION  B5
-
-static double servo_current[18];
 
 void test()
 {
@@ -191,33 +189,6 @@ void transferFrame()
    //   UART1_print_str(": ");
    //   UART1_println(buffer[i]);
    //}
-}
-
-void evalCurrent()
-{
-   servo_current[0] = (double)master_input.INA4_Ch3 * 5 / 100;
-   servo_current[1] = (double)master_input.INA4_Ch2 * 5 / 100;
-   servo_current[2] = (double)master_input.INA4_Ch1 * 5 / 100;
-
-   servo_current[3] = (double)master_input.INA3_Ch1 * 5 / 100;
-   servo_current[4] = (double)master_input.INA3_Ch2 * 5 / 100;
-   servo_current[5] = (double)master_input.INA3_Ch3 * 5 / 100;
-
-   servo_current[6] = (double)master_input.INA2_Ch1 * 5 / 100;
-   servo_current[7] = (double)master_input.INA2_Ch2 * 5 / 100;
-   servo_current[8] = (double)master_input.INA2_Ch3 * 5 / 100;
-
-   servo_current[9] = (double)master_input.INA1_Ch1 * 5 / 100;
-   servo_current[10] = (double)master_input.INA1_Ch2 * 5 / 100;
-   servo_current[11] = (double)master_input.INA1_Ch3 * 5 / 100;
-
-   servo_current[12] = (double)master_input.INA6_Ch1 * 5 / 100;
-   servo_current[13] = (double)master_input.INA6_Ch2 * 5 / 100;
-   servo_current[14] = (double)master_input.INA6_Ch3 * 5 / 100;
-
-   servo_current[15] = (double)master_input.INA5_Ch1 * 5 / 100;
-   servo_current[16] = (double)master_input.INA5_Ch2 * 5 / 100;
-   servo_current[17] = (double)master_input.INA5_Ch3 * 5 / 100;
 }
 
 void evalImuAngles()
@@ -570,7 +541,6 @@ int main(void)
 
          convertFlySkyData();
          switchMode();
-         // senseTest(servo_current[8]);
 
          //unsigned long time1 = system_time;
          transferFrame();

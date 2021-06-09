@@ -17,6 +17,7 @@ float input_roll = 0, input_pitch = 0, input_yaw = 0;
 float current_roll = 0, current_pitch = 0, current_yaw = 0;
 double RadX = 0, RadY = 0, RadZ = 0, GradX = 0, GradY = 0, GradZ = 0;
 double AcX = 0, AcY = 0, AcZ = 0, GyX = 0, GyY = 0, GyZ = 0;
+double servo_current[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 //geometry variables--------------------------
 // const uint8_t OA = 37;
@@ -44,6 +45,17 @@ int16_t local_start_point[6][3] =
     {-X_OFFSET - 30, 0,        -STARTHEIGHT},
     {-X_OFFSET,     -Y_OFFSET, -STARTHEIGHT},
 };
+
+int16_t local_stabilization_point[6][3]
+{
+   {X_OFFSET,      -Y_OFFSET, -STARTHEIGHT},
+   {X_OFFSET + 30,  0,        -STARTHEIGHT},
+   {X_OFFSET,       Y_OFFSET, -STARTHEIGHT},
+   {-X_OFFSET,      Y_OFFSET, -STARTHEIGHT},
+   {-X_OFFSET - 30, 0,        -STARTHEIGHT},
+   {-X_OFFSET,     -Y_OFFSET, -STARTHEIGHT},
+};
+
 
 //coordinates translation to leg systems
 float leg_translation[6][3] =
@@ -203,6 +215,33 @@ uint8_t evalSum(uint8_t* p_array, uint8_t size)
    return result;
 }
 
+void evalCurrent(void)
+{
+   servo_current[0] = (double)master_input.INA4_Ch3 * 5 / 100;
+   servo_current[1] = (double)master_input.INA4_Ch2 * 5 / 100;
+   servo_current[2] = (double)master_input.INA4_Ch1 * 5 / 100;
+
+   servo_current[3] = (double)master_input.INA3_Ch1 * 5 / 100;
+   servo_current[4] = (double)master_input.INA3_Ch2 * 5 / 100;
+   servo_current[5] = (double)master_input.INA3_Ch3 * 5 / 100;
+
+   servo_current[6] = (double)master_input.INA2_Ch1 * 5 / 100;
+   servo_current[7] = (double)master_input.INA2_Ch2 * 5 / 100;
+   servo_current[8] = (double)master_input.INA2_Ch3 * 5 / 100;
+
+   servo_current[9] = (double)master_input.INA1_Ch1 * 5 / 100;
+   servo_current[10] = (double)master_input.INA1_Ch2 * 5 / 100;
+   servo_current[11] = (double)master_input.INA1_Ch3 * 5 / 100;
+
+   servo_current[12] = (double)master_input.INA6_Ch1 * 5 / 100;
+   servo_current[13] = (double)master_input.INA6_Ch2 * 5 / 100;
+   servo_current[14] = (double)master_input.INA6_Ch3 * 5 / 100;
+
+   servo_current[15] = (double)master_input.INA5_Ch1 * 5 / 100;
+   servo_current[16] = (double)master_input.INA5_Ch2 * 5 / 100;
+   servo_current[17] = (double)master_input.INA5_Ch3 * 5 / 100;
+}
+
 bool checkSum(uint8_t source_sum, uint8_t* p_array, uint8_t size)
 {
    uint8_t new_sum = 0;
@@ -280,7 +319,8 @@ void switchMode(void)
    {
       // hexapodMove();
       // newVersion();
-      //square_test();
+      // senseTest();
+      senseTest1();
    }
 }
 
@@ -1161,7 +1201,7 @@ void squareTest(void)
    UART1_println_div(q2);
 }
 
-void senseTest(double servo_current)
+void senseTest(void)
 {
    static double height = -70;
    static double h_max = -40;
@@ -1183,7 +1223,6 @@ void senseTest(double servo_current)
       flag_init = true;
    }
 
-
    if (checkTimer(&stop_timer))
    {
       if (stop_flag == 1)
@@ -1201,7 +1240,7 @@ void senseTest(double servo_current)
          Vh = delta;
       }
 
-      if (Vh < 0.0 && servo_current > 90)
+      if (Vh < 0.0 && servo_current[8] > 90)
       {
          stop_flag = true;
          stop_timer.delay = 1000;
@@ -1235,6 +1274,128 @@ void senseTest(double servo_current)
       // moveLeg(4, Leg[4].current_x, Leg[4].current_y, Leg[4].current_z);
       // moveLeg(5, Leg[5].current_x, Leg[5].current_y, Leg[5].current_z);
    }
+}
+
+void senseTest1(void)
+{
+   static double start_height = -70;
+   static double h_max = -40;
+   static double h_min = -80;
+   static double delta = 0.5;
+   static double Vh = 0;
+   static bool flag_init = false;
+   static SoftTimer_ms stop_timer;
+
+   if (flag_init == false)
+   {
+      Vh = delta;
+      stop_timer.delay = 0;
+      stop_timer.start_time = system_time;
+
+      for (uint8_t leg_num = 0; leg_num < 6; leg_num++)
+      {
+         //1 - in air, 0 - on ground
+         Leg[leg_num].phase = 1;
+      }
+
+      flag_init = true;
+   }
+
+   //moving while not detecting ground
+   for (uint8_t leg_num = 0; leg_num < 6; leg_num++)
+   {
+      //if this leg already on ground - skip
+      if (Leg[leg_num].phase == 0)
+      {
+         continue;
+      }
+      else
+      {
+         if (Leg[leg_num].Zt >= h_max)
+         {
+            Vh = -delta;
+         }
+         else if (Leg[leg_num].Zt < h_min)
+         {
+            Vh = delta;
+         }
+
+         if (Vh < 0.0 && servo_current[leg_num * 3 + 2] > 100)
+         {
+            Leg[leg_num].phase = 0;
+            // stop_timer.delay = 1000;
+            // stop_timer.start_time = system_time;
+            // Vh = delta;
+
+            UART1_print_str("leg: ");
+            UART1_print(leg_num);
+            UART1_print_str(" stop h: ");
+            UART1_println_div(Leg[leg_num].Zt);
+
+            continue;
+         }
+
+         Leg[leg_num].Zt += Vh;
+      }
+   }
+
+   stabilizationMode(0);
+
+   moveLeg(2, Leg[2].current_x, Leg[2].current_y, Leg[2].Zt);
+
+   moveLeg(0, Leg[0].Xt, Leg[0].Yt, Leg[0].Zt);
+   moveLeg(1, Leg[1].Xt, Leg[1].Yt, Leg[1].Zt);
+   moveLeg(3, Leg[3].Xt, Leg[3].Yt, Leg[3].Zt);
+   moveLeg(4, Leg[4].Xt, Leg[4].Yt, Leg[4].Zt);
+   moveLeg(5, Leg[5].Xt, Leg[5].Yt, Leg[5].Zt);
+
+   // if (checkTimer(&stop_timer))
+   // {
+   //    if (stop_flag == 1)
+   //    {
+   //       stop_timer.delay = 0;
+   //       stop_flag = 0;
+   //    }
+
+   //    if (height >= h_max)
+   //    {
+   //       Vh = -delta;
+   //    }
+   //    else if (height < h_min)
+   //    {
+   //       Vh = delta;
+   //    }
+
+   //    if (Vh < 0.0 && servo_current[8] > 90)
+   //    {
+   //       stop_flag = true;
+   //       stop_timer.delay = 1000;
+   //       stop_timer.start_time = system_time;
+   //       Vh = delta;
+
+   //       UART1_print_str("stop h ");
+   //       UART1_println_div(height);
+
+   //       return;
+   //    }
+
+   //    height += Vh;
+
+   //    // UART1_print_str("h ");
+   //    // UART1_println_div(height);
+
+   //    stabilizationMode(0);
+
+   //    // moveLeg(2, Leg[2].current_x, Leg[2].current_y, height);
+   //    moveLeg(2, Leg[2].current_x, Leg[2].current_y, Leg[2].Zt);
+
+
+   //    moveLeg(0, Leg[0].Xt, Leg[0].Yt, Leg[0].Zt);
+   //    moveLeg(1, Leg[1].Xt, Leg[1].Yt, Leg[1].Zt);
+   //    moveLeg(3, Leg[3].Xt, Leg[3].Yt, Leg[3].Zt);
+   //    moveLeg(4, Leg[4].Xt, Leg[4].Yt, Leg[4].Zt);
+   //    moveLeg(5, Leg[5].Xt, Leg[5].Yt, Leg[5].Zt);
+   // }
 }
 
 void legManualControl(uint8_t leg_num)
