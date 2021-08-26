@@ -549,6 +549,7 @@ void TIM3_IRQHandler(void)
 
 void systemTimeInit(void)
 {
+	__disable_irq();
 	SysTick_Config(SystemCoreClock / 1000000);   //1 mcs
 }
 

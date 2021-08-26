@@ -119,8 +119,10 @@ extern struct Legs
 
 } Leg[6];
 
-extern int16_t local_start_point[6][3];
+extern const int16_t local_start_point[6][3];
 extern int16_t local_stabilization_point[6][3];
+extern uint16_t leg_contact_current_1[6];
+extern uint16_t leg_contact_current_2[6];
 
 extern float leg_translation[6][3];
 

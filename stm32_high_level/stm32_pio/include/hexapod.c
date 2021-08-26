@@ -36,7 +36,7 @@ double q0, q1, q2;
 struct Legs Leg[6];
 
 //local start points AS iS
-int16_t local_start_point[6][3] =
+const int16_t local_start_point[6][3] =
 {
     {X_OFFSET,      -Y_OFFSET, -STARTHEIGHT},
     {X_OFFSET + 30,  0,        -STARTHEIGHT},
@@ -46,7 +46,7 @@ int16_t local_start_point[6][3] =
     {-X_OFFSET,     -Y_OFFSET, -STARTHEIGHT},
 };
 
-int16_t local_stabilization_point[6][3]
+int16_t local_stabilization_point[6][3] =
 {
    {X_OFFSET,      -Y_OFFSET, -STARTHEIGHT},
    {X_OFFSET + 30,  0,        -STARTHEIGHT},
@@ -55,6 +55,9 @@ int16_t local_stabilization_point[6][3]
    {-X_OFFSET - 30, 0,        -STARTHEIGHT},
    {-X_OFFSET,     -Y_OFFSET, -STARTHEIGHT},
 };
+
+extern uint16_t leg_contact_current_1[6] = { 125, 155, 245, 120, 145, 155 };
+extern uint16_t leg_contact_current_2[6] = { 100, 120, 105, 110, 110, 110 };
 
 
 //coordinates translation to leg systems
@@ -298,29 +301,21 @@ void switchMode(void)
    if (channel[5] > 1300)                                //low
    {
       // servoManualControl();
-      stabilizationMode(1);
+//      stabilizationMode(1);
+      senseTest1();
    }
    else if (channel[5] < 1200 && channel[5] > 900)       //mid
    {
       //heightTest(H);
-      rotateBody(input_roll, input_pitch, input_yaw, 1);
+      rotateBody(input_pitch, input_roll, input_yaw, 1);
 
-      // new_version();
-      // legManualControl(2);
-
-      // moveLeg(0, 110, -110, 0);
-      // moveLeg(1, 155, 0, 0);
-      // moveLeg(2, 110, 110, 0);
-      // moveLeg(3, -110, 110, 0);
-      // moveLeg(4, -155, 0, 0);
-      // moveLeg(5, -110, -110, 0);
    }
    else if (channel[5] < 700)                            //high
    {
-      // hexapodMove();
+      hexapodMove();
       // newVersion();
       // senseTest();
-      senseTest1();
+//      senseTest1();
    }
 }
 
@@ -715,51 +710,51 @@ void rotateBody(double Qx, double Qy, double Qz, bool is_move)
 
    //right back leg
    //X
-   p_base[0][0] = local_start_point[0][0] + X_TRANSLATION;
+   p_base[0][0] = local_stabilization_point[0][0] + X_TRANSLATION;
    //Y
-   p_base[0][1] = local_start_point[0][1] - Y_TRANSLATION;
+   p_base[0][1] = local_stabilization_point[0][1] - Y_TRANSLATION;
    //Z
-   p_base[0][2] = local_start_point[0][2];
+   p_base[0][2] = local_stabilization_point[0][2];
 
    //right middle leg
    //X
-   p_base[1][0] = local_start_point[1][0] + X_TRANSLATION_MID;
+   p_base[1][0] = local_stabilization_point[1][0] + X_TRANSLATION_MID;
    //Y
-   p_base[1][1] = local_start_point[1][1];
+   p_base[1][1] = local_stabilization_point[1][1];
    //Z
-   p_base[1][2] = local_start_point[1][2];
+   p_base[1][2] = local_stabilization_point[1][2];
 
    //right front leg
    //X
-   p_base[2][0] = local_start_point[2][0] + X_TRANSLATION;
+   p_base[2][0] = local_stabilization_point[2][0] + X_TRANSLATION;
    //Y
-   p_base[2][1] = local_start_point[2][1] + Y_TRANSLATION;
+   p_base[2][1] = local_stabilization_point[2][1] + Y_TRANSLATION;
    //Z
-   p_base[2][2] = local_start_point[2][2];
+   p_base[2][2] = local_stabilization_point[2][2];
 
    //left front leg
    //X
-   p_base[3][0] = local_start_point[3][0] - X_TRANSLATION;
+   p_base[3][0] = local_stabilization_point[3][0] - X_TRANSLATION;
    //Y
-   p_base[3][1] = local_start_point[3][1] + Y_TRANSLATION;
+   p_base[3][1] = local_stabilization_point[3][1] + Y_TRANSLATION;
    //Z
-   p_base[3][2] = local_start_point[3][2];
+   p_base[3][2] = local_stabilization_point[3][2];
 
    //left middle leg
    //X
-   p_base[4][0] = local_start_point[4][0] - X_TRANSLATION_MID;
+   p_base[4][0] = local_stabilization_point[4][0] - X_TRANSLATION_MID;
    //Y
-   p_base[4][1] = local_start_point[4][1];
+   p_base[4][1] = local_stabilization_point[4][1];
    //Z
-   p_base[4][2] = local_start_point[4][2];
+   p_base[4][2] = local_stabilization_point[4][2];
 
    //left back leg
    //X
-   p_base[5][0] = local_start_point[5][0] - X_TRANSLATION;
+   p_base[5][0] = local_stabilization_point[5][0] - X_TRANSLATION;
    //Y
-   p_base[5][1] = local_start_point[5][1] - Y_TRANSLATION;
+   p_base[5][1] = local_stabilization_point[5][1] - Y_TRANSLATION;
    //Z
-   p_base[5][2] = local_start_point[5][2];
+   p_base[5][2] = local_stabilization_point[5][2];
 
    for (uint8_t i = 0; i < 6; i++)
    {
@@ -780,9 +775,9 @@ void rotateBody(double Qx, double Qy, double Qz, bool is_move)
       p_delta[i][1] = p_base_new[i][1] - p_base[i][1];
       p_delta[i][2] = p_base_new[i][2] - p_base[i][2];
 
-      Leg[i].Xt = local_start_point[i][0] + p_delta[i][0];
-      Leg[i].Yt = local_start_point[i][1] + p_delta[i][1];
-      Leg[i].Zt = local_start_point[i][2] + p_delta[i][2];
+      Leg[i].Xt = local_stabilization_point[i][0] + p_delta[i][0];
+      Leg[i].Yt = local_stabilization_point[i][1] + p_delta[i][1];
+      Leg[i].Zt = local_stabilization_point[i][2] + p_delta[i][2];
 
       if (is_move)
       {
@@ -1267,12 +1262,6 @@ void senseTest(void)
       moveLeg(3, Leg[3].Xt, Leg[3].Yt, Leg[3].Zt);
       moveLeg(4, Leg[4].Xt, Leg[4].Yt, Leg[4].Zt);
       moveLeg(5, Leg[5].Xt, Leg[5].Yt, Leg[5].Zt);
-
-      // moveLeg(0, Leg[0].current_x, Leg[0].current_y, Leg[0].current_z);
-      // moveLeg(1, Leg[1].current_x, Leg[1].current_y, Leg[1].current_z);
-      // moveLeg(3, Leg[3].current_x, Leg[3].current_y, Leg[3].current_z);
-      // moveLeg(4, Leg[4].current_x, Leg[4].current_y, Leg[4].current_z);
-      // moveLeg(5, Leg[5].current_x, Leg[5].current_y, Leg[5].current_z);
    }
 }
 
@@ -1280,11 +1269,12 @@ void senseTest1(void)
 {
    static double start_height = -70;
    static double h_max = -40;
-   static double h_min = -80;
+   static double h_min = -100;
    static double delta = 0.5;
    static double Vh = 0;
    static bool flag_init = false;
    static SoftTimer_ms stop_timer;
+   static uint8_t leg_stop_counter = 0;
 
    if (flag_init == false)
    {
@@ -1296,6 +1286,9 @@ void senseTest1(void)
       {
          //1 - in air, 0 - on ground
          Leg[leg_num].phase = 1;
+         Leg[leg_num].Xt = Leg[leg_num].start_x;
+         Leg[leg_num].Yt = Leg[leg_num].start_y;
+         Leg[leg_num].Zt = Leg[leg_num].start_z;
       }
 
       flag_init = true;
@@ -1320,7 +1313,9 @@ void senseTest1(void)
             Vh = delta;
          }
 
-         if (Vh < 0.0 && servo_current[leg_num * 3 + 2] > 100)
+         // if (servo_current[leg_num * 3 + 2] > leg_contact_current_2[leg_num] || servo_current[leg_num * 3 + 1] > leg_contact_current_1[leg_num])
+         if (Vh < 0.0 && (servo_current[leg_num * 3 + 2] > leg_contact_current_2[leg_num] || servo_current[leg_num * 3 + 1] > leg_contact_current_1[leg_num]))
+            // if (Vh < 0.0 && servo_current[leg_num * 3 + 2] > 110)
          {
             Leg[leg_num].phase = 0;
             // stop_timer.delay = 1000;
@@ -1332,6 +1327,12 @@ void senseTest1(void)
             UART1_print_str(" stop h: ");
             UART1_println_div(Leg[leg_num].Zt);
 
+            leg_stop_counter++;
+
+            local_stabilization_point[leg_num][0] = Leg[leg_num].start_x;
+            local_stabilization_point[leg_num][1] = Leg[leg_num].start_y;
+            local_stabilization_point[leg_num][2] = Leg[leg_num].Zt;
+
             continue;
          }
 
@@ -1339,63 +1340,18 @@ void senseTest1(void)
       }
    }
 
-   stabilizationMode(0);
+   if (leg_stop_counter == 6)
+   {
+      stabilizationMode(0);
+   }
 
-   moveLeg(2, Leg[2].current_x, Leg[2].current_y, Leg[2].Zt);
+   moveLeg(2, Leg[2].Xt, Leg[2].Yt, Leg[2].Zt);
 
    moveLeg(0, Leg[0].Xt, Leg[0].Yt, Leg[0].Zt);
    moveLeg(1, Leg[1].Xt, Leg[1].Yt, Leg[1].Zt);
    moveLeg(3, Leg[3].Xt, Leg[3].Yt, Leg[3].Zt);
    moveLeg(4, Leg[4].Xt, Leg[4].Yt, Leg[4].Zt);
    moveLeg(5, Leg[5].Xt, Leg[5].Yt, Leg[5].Zt);
-
-   // if (checkTimer(&stop_timer))
-   // {
-   //    if (stop_flag == 1)
-   //    {
-   //       stop_timer.delay = 0;
-   //       stop_flag = 0;
-   //    }
-
-   //    if (height >= h_max)
-   //    {
-   //       Vh = -delta;
-   //    }
-   //    else if (height < h_min)
-   //    {
-   //       Vh = delta;
-   //    }
-
-   //    if (Vh < 0.0 && servo_current[8] > 90)
-   //    {
-   //       stop_flag = true;
-   //       stop_timer.delay = 1000;
-   //       stop_timer.start_time = system_time;
-   //       Vh = delta;
-
-   //       UART1_print_str("stop h ");
-   //       UART1_println_div(height);
-
-   //       return;
-   //    }
-
-   //    height += Vh;
-
-   //    // UART1_print_str("h ");
-   //    // UART1_println_div(height);
-
-   //    stabilizationMode(0);
-
-   //    // moveLeg(2, Leg[2].current_x, Leg[2].current_y, height);
-   //    moveLeg(2, Leg[2].current_x, Leg[2].current_y, Leg[2].Zt);
-
-
-   //    moveLeg(0, Leg[0].Xt, Leg[0].Yt, Leg[0].Zt);
-   //    moveLeg(1, Leg[1].Xt, Leg[1].Yt, Leg[1].Zt);
-   //    moveLeg(3, Leg[3].Xt, Leg[3].Yt, Leg[3].Zt);
-   //    moveLeg(4, Leg[4].Xt, Leg[4].Yt, Leg[4].Zt);
-   //    moveLeg(5, Leg[5].Xt, Leg[5].Yt, Leg[5].Zt);
-   // }
 }
 
 void legManualControl(uint8_t leg_num)
